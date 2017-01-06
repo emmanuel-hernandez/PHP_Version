@@ -15,7 +15,7 @@ class ServiceResult {
 	private $message;
 	private $queryHelper;
 	
-	public function __construct($object = null, array $collection = null, $success = StatusResultService::FAILED, $message = '') {
+	public function __construct($object = null, array $collection = null, $success = StatusResultService::STATUS_FAILED, $message = '') {
 		$this->statusResult = $success;
 		$this->message = $message;
 		$this->object = $object;
@@ -26,7 +26,7 @@ class ServiceResult {
 		return $this->statusResult;
 	}
 	
-	public function setStatusResult( StatusResultService $success) {
+	public function setStatusResult($success) {
 		$this->statusResult = $success;
 	}
 	
@@ -35,7 +35,7 @@ class ServiceResult {
 	}
 	
 	public function setMessage($message) {
-		$this->message = message;
+		$this->message = $message;
 	}
 	
 	public function getObject() {
@@ -43,7 +43,7 @@ class ServiceResult {
 	}
 
 	public function setObject($object) {
-		$this->object = object;
+		$this->object = $object;
 	}
 
 	public function getCollection() {

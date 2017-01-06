@@ -4,8 +4,9 @@ namespace com\efe13\tdt\service;
 require_once( getMVCPath( ACTIVE_ENUM_PATH ) );
 require_once( getMVCPath( UPDATE_ENUM_PATH ) );
 require_once( getMVCPath( VALIDATION_EXCEPTION_PATH ) );
-require_once( getMVCPath( DTO_API_PATH ) );
+require_once( getMVCPath( MAPPEABLE_PATH ) );
 require_once( getMVCPath( ENTITY_API_PATH ) );
+require_once( getMVCPath( QUERY_HELPER_PATH ) );
 require_once( getMVCPath( SERVICE_API_PATH ) );
 require_once( getAppPath( CHANNEL_BAND_DAO_PATH ) );
 require_once( getAppPath( CHANNEL_BAND_DTO_PATH ) );
@@ -14,8 +15,9 @@ require_once( getAppPath( CHANNEL_BAND_PATH ) );
 use com\efe13\mvc\commons\api\enums\ActiveEnum;
 use com\efe13\mvc\commons\api\enums\UpdateEnum;
 use com\efe13\mvc\commons\api\exception\ValidationException;
-use com\efe13\mvc\model\api\impl\dto\DTOAPI;
+use com\efe13\mvc\commons\api\interfaces\Mappeable;
 use com\efe13\mvc\model\api\impl\entity\EntityAPI;
+use com\efe13\mvc\model\api\impl\QueryHelper;
 use com\efe13\mvc\service\api\impl\ServiceAPI;
 use com\efe13\tdt\dao\ChannelBandDAO;
 use com\efe13\tdt\model\dto\ChannelBandDTO;
@@ -26,11 +28,11 @@ class ChannelBandService extends ServiceAPI {
 	private static $CHANNEL_BAND_DAO;
 	
 	public function __construct() {
-		$CHANNEL_BAND_DAO = new ChannelBandDAO();
+		self::$CHANNEL_BAND_DAO = new ChannelBandDAO();
 	}
 	
 	//@Override
-	public function getById( DTOAPI $dto ) {
+	public function getById( Mappeable $dto ) {
 		$entity = new ChannelBand();
 		
 		try {
@@ -47,16 +49,17 @@ class ChannelBandService extends ServiceAPI {
 	}
 
 	//@Override
-	public function getAll($queryHelper) {
+	public function getAll(QueryHelper $queryHelper = null) {
 		$dtos = array();
 		
 		try {
 			$entities = self::$CHANNEL_BAND_DAO->getAll( $queryHelper );
-			if( empty( $entities ) ) {
+
+			if( !empty( $entities ) ) {
 				$dtos = array();
 				
 				foreach( $entities as $entity ) {
-					$dtos->add( $this->map( $entity, new ChannelBandDTO() ) );
+					$dtos[] = $entity;//parent::map( $entity, new ChannelBandDTO() );
 				}
 			}
 		}
@@ -67,7 +70,7 @@ class ChannelBandService extends ServiceAPI {
 	}
 
 	//@Override
-	public function save(DTOAPI $channelBandDTO) {
+	public function save(Mappeable $channelBandDTO) {
 		try {
 			$channelBand = $this->map( $channelBandDTO, new ChannelBand() );
 			return self::$CHANNEL_BAND_DAO->save( $channelBand );
@@ -78,7 +81,7 @@ class ChannelBandService extends ServiceAPI {
 	}
 
 	//@Override
-	public function update(DTOAPI $channelBandDTO) {
+	public function update(Mappeable $channelBandDTO) {
 		try {
 			$channelBand = $this->map( $channelBandDTO, new ChannelBand() );
 			return self::$CHANNEL_BAND_DAO->update( $channelBand );
@@ -89,7 +92,7 @@ class ChannelBandService extends ServiceAPI {
 	}
 
 	//@Override
-	public function delete(DTOAPI $channelBandDTO) {
+	public function delete(Mappeable $channelBandDTO) {
 		try {
 			$channelBandDTO->setActive( ActiveEnum::INACTIVE );
 			return $this->update( $channelBandDTO );
@@ -100,12 +103,12 @@ class ChannelBandService extends ServiceAPI {
 	}
 
 	//@Override
-	public function validateDTO(DTOAPI $dto, $update) {
+	public function validateDTO(Mappeable $dto, $update) {
 		throw new ValidationException( "This method has not implementation\ It needs to be implemented by the concrete class" );
 	}
 
 	//@Override
-	public function sanitizeDTO(DTOAPI $dto) {
+	public function sanitizeDTO(Mappeable $dto) {
 		throw new ValidationException( "This method has not implementation\ It needs to be implemented by the concrete class" );	
 	}
 }

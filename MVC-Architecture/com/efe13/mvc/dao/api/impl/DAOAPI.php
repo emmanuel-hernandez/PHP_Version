@@ -9,8 +9,9 @@ import org.hibernate.criterion.Restrictions;
 require_once( dirname( dirname( dirname(__DIR__) ) ) . '/commons/api/enums/ActiveEnum.php' );
 require_once( dirname( dirname( dirname(__DIR__) ) ) . '/commons/api/exception/DAOException.php' );
 require_once( dirname( dirname( dirname(__DIR__) ) ) . '/commons/api/util/Utils.php' );
-require_once( dirname( dirname( dirname(__DIR__) ) ) . '/dao/api/IDAO.php' );
-require_once( dirname( dirname( dirname(__DIR__) ) ) . '/dao/api/impl/util/HibernateUtil.php' );
+require_once( dirname(__DIR__) . '/IDAO.php' );
+require_once( 'util/HibernateUtil.php' );
+require_once( 'util/Restrictions.php' );
 require_once( dirname( dirname( dirname(__DIR__) ) ) . '/commons/api/interfaces/Mappeable.php' );
 require_once( dirname( dirname( dirname(__DIR__) ) ) . '/model/api/impl/QueryHelper.php' );
 
@@ -19,21 +20,23 @@ use com\efe13\mvc\commons\api\exception\DAOException;
 use com\efe13\mvc\commons\api\util\Utils;
 use com\efe13\mvc\dao\api\IDAO;
 use com\efe13\mvc\dao\api\impl\util\HibernateUtil;
+use com\efe13\mvc\dao\api\impl\util\Restrictions;
 use com\efe13\mvc\commons\api\interfaces\Mappeable;
 use com\efe13\mvc\model\api\impl\QueryHelper;
 
 abstract class DAOAPI implements IDAO {
 
 	private $sessionFactory;
-	//private final Class<T> criteriaClass;
+	private $criteriaClass;
 	//private final static Logger log = Logger.getLogger( DAOAPI.class );
 	
 	private $columnNameForActiveElement;
 	private $activeEnum;
 	
-	public function __construct() {
+	public function __construct($criteriaClass, $columnNameForActiveElement, $activeEnum) {
 		$this->sessionFactory = HibernateUtil::getSessionFactory();
 	
+		$this->criteriaClass = $criteriaClass;
 		$this->columnNameForActiveElement = $columnNameForActiveElement;
 		$this->activeEnum = $activeEnum;
 		
@@ -78,14 +81,14 @@ abstract class DAOAPI implements IDAO {
 	}
 	
 	//@Override
-	public function getAll(QueryHelper $helper) {
+	public function getAll(QueryHelper $helper = null) {
 		try {
 			if( !Utils::isNull( $helper ) && !($helper instanceof QueryHelper) ) {
 				throw new RuntimeException( "Query Helper expected!" );
 			}
 			
 			$criteria = $this->getCriteria()
-				->add( Restrictions::eq( $columnNameForActiveElement, $this->activeEnum ) );
+				->add( Restrictions::eq( $this->columnNameForActiveElement, $this->activeEnum ) );
 			
 			if( !Utils::isNull( $helper ) ) {
 				if( !Utils::isNull( $queryHelper->getPaginationAPI() ) ) {
@@ -164,14 +167,11 @@ abstract class DAOAPI implements IDAO {
 	}
 
 	protected function getCriteria($alias = '_this') {
-		if( Utils::isEmpty( $alias ) )
-			return $this->getSession()->createCriteria( $this->criteriaClass );
-		
 		return $this->getSession()->createCriteria( $this->criteriaClass, $alias );
 	}
 	
 	private final function getSession() {
-		return $sessionFactory->openSession();
+		return $this->sessionFactory->openSession();
 	}
 	
 	/*

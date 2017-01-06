@@ -17,6 +17,7 @@ define( 'UTILITIES_PATH', 'com/efe13/mvc/commons/api/util/Utilities.php' );
 define( 'UTILS_PATH', 'com/efe13/mvc/commons/api/util/Utils.php' );
 define( 'ACTIVE_ENUM_PATH', 'com/efe13/mvc/commons/api/enums/ActiveEnum.php' );
 define( 'UPDATE_ENUM_PATH', 'com/efe13/mvc/commons/api/enums/UpdateEnum.php' );
+define( 'MAPPEABLE_PATH', 'com/efe13/mvc/commons/api/interfaces/Mappeable.php' );
 define( 'FILTER_API_PATH', 'com/efe13/mvc/model/api/impl/FilterAPI.php' );
 define( 'ORDER_API_PATH', 'com/efe13/mvc/model/api/impl/OrderAPI.php' );
 define( 'PAGINATION_API_PATH', 'com/efe13/mvc/model/api/impl/PaginationAPI.php' );
@@ -31,10 +32,13 @@ define( 'FILTER_DTO_PATH', 'com/efe13/tdt/helper/FilterDTO.php' );
 define( 'PAGINATION_DTO_PATH' ,'com/efe13/tdt/helper/PaginationDTO.php' );
 define( 'SERVICE_REQUEST_PATH', 'com/efe13/tdt/helper/ServiceRequest.php' );
 define( 'SERVICE_RESULT_PATH', 'com/efe13/tdt/helper/ServiceResult.php' );
+
 define( 'CHANNEL_BAND_CONTROLLER_PATH', 'com/efe13/tdt/controller/ChannelBandController.php' );
 define( 'CHANNEL_BAND_DTO_PATH', 'com/efe13/tdt/model/dto/ChannelBandDTO.php' );
 define( 'CHANNEL_BAND_SERVICE_IMPL_PATH', 'com/efe13/tdt/service/impl/ChannelBandServiceImpl.php' );
 define( 'CHANNEL_BAND_SERVICE_PATH', 'com/efe13/tdt/service/ChannelBandService.php' );
+define( 'CHANNEL_BAND_DAO_PATH', 'com/efe13/tdt/dao/ChannelBandDAO.php' );
+define( 'CHANNEL_BAND_PATH', 'com/efe13/tdt/model/entity/ChannelBand.php' );
 
 function getMVCPath($constant) {
 	return getPath( 'MVC-Architecture/' . $constant );
@@ -45,6 +49,7 @@ function getAppPath($constant) {
 }
 
 function getPath($path) {
-	return $_SERVER['CONTEXT_DOCUMENT_ROOT'] . $path;
+	$root = dirname( dirname( dirname( dirname( dirname(__DIR__) ) ) ) );
+	return $root . '/'. $path;
 }
 ?>

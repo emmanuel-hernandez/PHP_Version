@@ -1,9 +1,9 @@
 <?php
 namespace com\efe13\mvc\dao\api\impl\util;
 
-require_once( dirname( dirname( dirname( dirname(__DIR__) ) ) ) . '/dao/api/impl/util/Connection.php' );
+require_once( 'SessionFactory.php' );
 
-use com\efe13\mvc\dao\api\impl\util\Connection;
+use com\efe13\mvc\dao\api\impl\util\SessionFactory;
 
 class HibernateUtil {
 
@@ -11,12 +11,8 @@ class HibernateUtil {
 	private static $sessionFactory;
 
 	private function __construct() {
-		$this->openSession();
-	}
-	
-	public function openSession() {
 		try {
-	        $this->sessionFactory = new Connection( 'root', 'admin', 'localhost', 'tdt' );
+			self::$sessionFactory = new SessionFactory( 'root', 'root', 'localhost', 'tdt' );
 		}
 		catch( DAOException $ex ) {
 			throw new DAOException( $ex->getMessage() );
@@ -32,7 +28,8 @@ class HibernateUtil {
 	}
 
 	public static function getSessionFactory() {
-        $this->getInstance();
+        self::getInstance();
+
 		return HibernateUtil::$sessionFactory;
 	}
 }

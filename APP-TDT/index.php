@@ -1,6 +1,5 @@
 <?php
 /*
-
 require_once( 'com/efe13/mvc/model/api/dto/IDTO.php' );
 require_once( 'com/efe13/mvc/model/api/entity/IEntity.php' );
 require_once( 'com/efe13/mvc/model/api/impl/DTOAPI.php' );
@@ -14,13 +13,10 @@ require_once( 'com/efe13/mvc/commons/api/exception/ServiceException.php' );
 require_once( 'com/efe13/mvc/commons/api/exception/ValidationException.php' );
 require_once( 'com/efe13/mvc/commons/api/exception/DAOException.php' );
 require_once( 'com/efe13/mvc/commons/api/exception/HibernateException.php' );
-
 require_once( 'com/efe13/mvc/commons/api/util/Utilities.php' );
 require_once( 'com/efe13/mvc/commons/api/util/Utils.php' );
-
 require_once( 'com/efe13/mvc/commons/api/enums/ActiveEnum.php' );
 require_once( 'com/efe13/mvc/commons/api/enums/UpdateEnum.php' );
-
 require_once( 'com/efe13/mvc/model/api/impl/FilterAPI.php' );
 require_once( 'com/efe13/mvc/model/api/impl/OrderAPI.php' );
 require_once( 'com/efe13/mvc/model/api/impl/PaginationAPI.php' );
@@ -59,25 +55,14 @@ use com\efe13\mvc\dao\api\impl\DAOAPI;
 */
 
 require_once( 'com/efe13/tdt/utils/AppPaths.php' );
-
-require_once( getAppPath( APP_CONSTANT_PATH ) );
-require_once( getAppPath( STATUS_RESULT_SERVICE_PATH ) );
-require_once( getAppPath( FILTER_DTO_PATH ) );
-require_once( getAppPath( PAGINATION_DTO_PATH ) );
-require_once( getAppPath( SERVICE_REQUEST_PATH ) );
-require_once( getAppPath( SERVICE_RESULT_PATH ) );
 require_once( getAppPath( CHANNEL_BAND_CONTROLLER_PATH ) );
-require_once( getAppPath( CHANNEL_BAND_DTO_PATH ) );
-require_once( getAppPath( CHANNEL_BAND_SERVICE_IMPL_PATH ) );
-
-use com\efe13\tdt\utils\AppConstant;
-use com\efe13\tdt\enums\StatusResultService;
-use com\efe13\tdt\helper\FilterDTO;
-use com\efe13\tdt\helper\PaginationDTO;
-use com\efe13\tdt\helper\ServiceRequest;
-use com\efe13\tdt\helper\ServiceResult;
 use com\efe13\tdt\controller\ChannelBandController;
-use com\efe13\tdt\service\ChannelBandServiceImpl;
 
+
+$controller = new ChannelBandController();
+$channels = $controller->getChannelBands();
+
+//var_dump( $channels );
+die( json_encode( (array) $channels, JSON_PRETTY_PRINT ) );
 
 ?>

@@ -40,8 +40,9 @@ abstract class ServiceAPI extends Utilities implements IService {
 	}
 	
 	public function map(Mappeable $source, Mappeable $destination) {
-		$destination = new ModelMapper().map( $source, $destination.getClass() );
-		return $destination;
+		//$destination = new ModelMapper().map( $source, $destination.getClass() );
+		//return $destination;
+		die( $source );
 	}
 }
 ?>

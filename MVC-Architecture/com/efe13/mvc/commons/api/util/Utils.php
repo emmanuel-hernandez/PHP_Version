@@ -20,7 +20,7 @@ final class Utils {
 		return $object == null;
 	}
 	
-	public static function isEmpty(string $str) {
+	public static function isEmpty($str) {
 		return self::isNull( $str ) || strlen( trim( $str ) ) == 0;
 	}
 	
@@ -35,7 +35,7 @@ final class Utils {
 		return 0;
 	}
 
-	public static function toUpperCase(string $str) {
+	public static function toUpperCase($str) {
 		if( self::isEmpty( $str ) ) {
 			return $str;
 		}

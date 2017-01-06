@@ -25,9 +25,9 @@ class ChannelBandController {
 	}
 	
 	//@RequestMapping( value="/", method=RequestMethod.GET )
-	public function getChannelBands( QueryHelper $queryHelper ) {
+	public function getChannelBands( QueryHelper $queryHelper = null ) {
 		try {
-			return self::$CHANNEL_BAND_SERVICE.listAll( queryHelper );
+			return self::$CHANNEL_BAND_SERVICE->listAll( $queryHelper );
 		}
 		catch( Exception $ex ) {
 			return new ServiceResult( $ex->getMessage(), StatusResultService::STATUS_FAILED );
