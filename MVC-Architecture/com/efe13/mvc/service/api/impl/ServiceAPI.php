@@ -19,7 +19,7 @@ use com\efe13\mvc\service\api\IService;
 
 abstract class ServiceAPI extends Utilities implements IService {
 
-	public function getById(DTOAPI $object) {
+	public function getById(Mappeable $object) {
 		throw new ServiceException( "This method has not implementation. It needs to be implemented by the concrete class" );
 	}
 	
@@ -27,15 +27,15 @@ abstract class ServiceAPI extends Utilities implements IService {
 		throw new ServiceException( "This method has not implementation. It needs to be implemented by the concrete class" );
 	}
 	
-	public function save(DTOAPI $object) {
+	public function save(Mappeable $object) {
 		throw new ServiceException( "This method has not implementation. It needs to be implemented by the concrete class" );
 	}
 	
-	public function update(DTOAPI $object) {
+	public function update(Mappeable $object) {
 		throw new ServiceException( "This method has not implementation. It needs to be implemented by the concrete class" );
 	}
 	
-	public function delete(DTOAPI $object) {
+	public function delete(Mappeable $object) {
 		throw new ServiceException( "This method has not implementation. It needs to be implemented by the concrete class" );
 	}
 	

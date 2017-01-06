@@ -1,4 +1,6 @@
 <?php
+/*
+
 require_once( 'com/efe13/mvc/model/api/dto/IDTO.php' );
 require_once( 'com/efe13/mvc/model/api/entity/IEntity.php' );
 require_once( 'com/efe13/mvc/model/api/impl/DTOAPI.php' );
@@ -54,6 +56,28 @@ use com\efe13\mvc\model\api\impl\helper\QueryHelper;
 
 use com\efe13\mvc\dao\api\impl\util\HibernateUtil;
 use com\efe13\mvc\dao\api\impl\DAOAPI;
+*/
+
+require_once( 'com/efe13/tdt/utils/AppPaths.php' );
+
+require_once( getAppPath( APP_CONSTANT_PATH ) );
+require_once( getAppPath( STATUS_RESULT_SERVICE_PATH ) );
+require_once( getAppPath( FILTER_DTO_PATH ) );
+require_once( getAppPath( PAGINATION_DTO_PATH ) );
+require_once( getAppPath( SERVICE_REQUEST_PATH ) );
+require_once( getAppPath( SERVICE_RESULT_PATH ) );
+require_once( getAppPath( CHANNEL_BAND_CONTROLLER_PATH ) );
+require_once( getAppPath( CHANNEL_BAND_DTO_PATH ) );
+require_once( getAppPath( CHANNEL_BAND_SERVICE_IMPL_PATH ) );
+
+use com\efe13\tdt\utils\AppConstant;
+use com\efe13\tdt\enums\StatusResultService;
+use com\efe13\tdt\helper\FilterDTO;
+use com\efe13\tdt\helper\PaginationDTO;
+use com\efe13\tdt\helper\ServiceRequest;
+use com\efe13\tdt\helper\ServiceResult;
+use com\efe13\tdt\controller\ChannelBandController;
+use com\efe13\tdt\service\ChannelBandServiceImpl;
 
 
 ?>
