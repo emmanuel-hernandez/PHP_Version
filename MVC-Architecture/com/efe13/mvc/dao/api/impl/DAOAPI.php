@@ -103,7 +103,7 @@ abstract class DAOAPI implements IDAO {
 				}
 			}
 			
-			return $criteria->list();
+			return $criteria->lisst();
 		}
 		finally {
 			$this->closeSession();

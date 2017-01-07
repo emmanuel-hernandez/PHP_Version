@@ -37,20 +37,75 @@ final class Criteria {
 		return $this;
 	}
 
-	public function list() {
-		$r = array();
-		$r[] = array( 'id' => 1,
-				 'name' => 'TDT',
-				 'description' => 'Televisón Digital',
-				 'active' => true );
+	public function lisst() {
+		$objects = null;
+		$this->sql = sprintf( 'SELECT %s FROM %s', 
+							  implode( $this->getPropertiesClass(), ', ' ),
+							  strtolower( $this->getClassName() ) );
 
-		return $r;
+		$result = $this->sessionFactory->query( $this->sql );
+		if( $result === false ) {
+			echo $this->sessionFactory->error;
+		}
+		else {
+			while( $row = $result->fetch_array( MYSQLI_ASSOC ) ) {
+				$objects[] = $this->buildObject( $row );
+			}
+		}
+
+		return $objects;
 	}
 
 	private function getQuery() {
 		$query = sprintf( '%s', 'hola' );
 
 		return $query;
+	}
+
+	private function getClassName() {
+		$fullClassName = get_class( $this->clazz );
+		$lastBackSlashPos = strripos( $fullClassName, '\\' ) + 1;
+		$className = substr( $fullClassName, $lastBackSlashPos, strlen( $fullClassName ) );
+		
+		return $className;
+	}
+
+	private function getPropertiesClass() {
+		$publicMethods = get_class_methods( $this->clazz );
+		$properties = array();
+
+		if( empty( $publicMethods ) ) {
+			return array();
+		}
+
+		foreach( $publicMethods as $method ) {
+			$prefix = substr( $method, 0, 3 );
+
+			if( strcasecmp( $prefix, 'set' ) == 0  ) {
+				$property = strtolower( substr( $method, 3, strlen( $method ) ) );
+
+				if( strcasecmp( $property, 'id' ) == 0 ) {
+					$property = $this->getClassName() . $property;
+				}
+
+				$properties[] = $property;
+			}
+		}
+
+		return $properties;
+	}
+
+	private function buildObject(array $data) {
+		$classInstance = new $this->clazz;
+
+		foreach ( $data as $method => $value ) {
+			$id = substr( $method, strlen( $method ) - 2, 2 );
+			$method = 'set' . (( strcasecmp( $id, 'id' ) == 0 ) ? $id : $method);
+
+			$classInstance->$method( $value );
+		}
+
+		return $classInstance;
 	}
 }
 ?>

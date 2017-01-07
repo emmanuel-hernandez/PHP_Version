@@ -27,6 +27,7 @@ define( 'DAO_API_PATH', 'com/efe13/mvc/dao/api/impl/DAOAPI.php' );
 
 //APP-TDT paths!!!
 define( 'APP_CONSTANT_PATH', 'com/efe13/tdt/utils/AppConstant.php' );
+define( 'PRINTER_PATH', 'com/efe13/tdt/utils/Printer.php' );
 define( 'STATUS_RESULT_SERVICE_PATH', 'com/efe13/tdt/enums/StatusResultService.php' );
 define( 'FILTER_DTO_PATH', 'com/efe13/tdt/helper/FilterDTO.php' );
 define( 'PAGINATION_DTO_PATH' ,'com/efe13/tdt/helper/PaginationDTO.php' );
