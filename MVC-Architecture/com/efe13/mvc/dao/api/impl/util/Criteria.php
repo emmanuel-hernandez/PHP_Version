@@ -2,8 +2,12 @@
 namespace com\efe13\mvc\dao\api\impl\util;
 
 require_once( dirname( dirname( dirname( dirname(__DIR__) ) ) ) . '/commons/api/util/Utils.php' );
+require_once( dirname( dirname( dirname( dirname(__DIR__) ) ) ) . '/commons/api/exception/HibernateException.php' );
+require_once( 'HibernateUtil.php' );
 
 use com\efe13\mvc\commons\api\util\Utils;
+use com\efe13\mvc\commons\api\exception\HibernateException;
+use com\efe13\mvc\dao\api\impl\util\HibernateUtil;
 
 final class Criteria {
 	
@@ -11,6 +15,8 @@ final class Criteria {
 	private $clazz;
 	private $sql;
 	private $restrictions;
+
+	private static $IS_INSERT = true;
 
 	public function __construct($sessionFactory) {
 		$this->sessionFactory = $sessionFactory;
@@ -27,85 +33,102 @@ final class Criteria {
 	}
 
 	public function add($restriction) {
-		if( Utils::isEmpty( $this->restrictions ) ) {
-			$this->restrictions = 'WHERE ' . $restriction;
-		}
-		else {
-			$this->restrictions .= $restriction;
-		}
+		$this->restrictions = sprintf( '%s %s', $this->getRestrictions(), $restriction );
 
 		return $this;
 	}
 
-	public function lisst() {
+	public function listAll() {
 		$objects = null;
 		$this->sql = sprintf( 'SELECT %s FROM %s', 
-							  implode( $this->getPropertiesClass(), ', ' ),
-							  strtolower( $this->getClassName() ) );
+							  implode( HibernateUtil::getPropertiesClass( $this->clazz ), ', ' ),
+							  strtolower( HibernateUtil::getClassName( $this->clazz ) ) );
 
-		$result = $this->sessionFactory->query( $this->sql );
-		if( $result === false ) {
-			echo $this->sessionFactory->error;
-		}
-		else {
-			while( $row = $result->fetch_array( MYSQLI_ASSOC ) ) {
-				$objects[] = $this->buildObject( $row );
-			}
+		$result = $this->execute();
+		while( $row = $result->fetch_array( MYSQLI_ASSOC ) ) {
+			$objects[] = HibernateUtil::buildObject( $this->clazz, $row );
 		}
 
 		return $objects;
 	}
 
-	private function getQuery() {
-		$query = sprintf( '%s', 'hola' );
+	public function uniqueResult() {
+		$this->sql = sprintf( 'SELECT %s FROM %s',
+							  implode( HibernateUtil::getPropertiesClass( $this->clazz ), ', ' ),
+							  strtolower( HibernateUtil::getClassName( $this->clazz ) ) );
 
-		return $query;
-	}
-
-	private function getClassName() {
-		$fullClassName = get_class( $this->clazz );
-		$lastBackSlashPos = strripos( $fullClassName, '\\' ) + 1;
-		$className = substr( $fullClassName, $lastBackSlashPos, strlen( $fullClassName ) );
-		
-		return $className;
-	}
-
-	private function getPropertiesClass() {
-		$publicMethods = get_class_methods( $this->clazz );
-		$properties = array();
-
-		if( empty( $publicMethods ) ) {
-			return array();
+		if( !Utils::isNull( $this->restrictions != null ) ) {
+			$this->sql = sprintf( '%s %s', $this->sql, $this->getRestrictions() );
 		}
 
-		foreach( $publicMethods as $method ) {
-			$prefix = substr( $method, 0, 3 );
+		$result = $this->execute();
+		if( $result->num_rows == 0 ) {
+			return null;
+		}
+		else if( $result->num_rows > 1 ) {
+			throw new HibernateException( 'Result set is not a unique result' );
+		}
 
-			if( strcasecmp( $prefix, 'set' ) == 0  ) {
-				$property = strtolower( substr( $method, 3, strlen( $method ) ) );
+		return HibernateUtil::buildObject( $this->clazz, $result->fetch_array( MYSQLI_ASSOC ) );
+	}
 
-				if( strcasecmp( $property, 'id' ) == 0 ) {
-					$property = $this->getClassName() . $property;
-				}
-
-				$properties[] = $property;
+	public function save($object) {
+		$propertiesValues = HibernateUtil::getPropertiesClassValuesWithOutIdProperty( $this->clazz, $object );
+		for( $i=0; $i<count( $propertiesValues ); $i++ ) {
+			if( is_string( $propertiesValues[ $i ] ) ) {
+				$propertiesValues[ $i ] = sprintf( "'%s'", $propertiesValues[ $i ] );
 			}
 		}
 
-		return $properties;
+		$this->sql = sprintf( 'INSERT INTO %s(%s) VALUES(%s)',
+							  strtolower( HibernateUtil::getClassName( $this->clazz ) ),
+							  implode( HibernateUtil::getPropertiesClassWithOutIdProperty( $this->clazz ), ', ' ),
+							  implode( $propertiesValues, ', ' ) );
+
+		return ( $this->execute( self::$IS_INSERT ) );
 	}
 
-	private function buildObject(array $data) {
-		$classInstance = new $this->clazz;
+	public function update($object) {
+		$propertiesValues = HibernateUtil::getPropertiesClassValuesWithOutIdProperty( $this->clazz, $object );
+		$properties = HibernateUtil::getPropertiesClassWithOutIdProperty( $this->clazz );
 
-		foreach ( $data as $method => $value ) {
-			$id = substr( $method, strlen( $method ) - 2, 2 );
-			$method = 'set' . (( strcasecmp( $id, 'id' ) == 0 ) ? $id : $method);
-
-			$classInstance->$method( $value );
+		for( $i=0; $i<count( $properties ); $i++ ) {
+			$propertiesValues[ $i ] = is_string( $propertiesValues[ $i ] ) ?
+									  sprintf( "%s = '%s'", $properties[ $i ], $propertiesValues[ $i ] ) :
+									  sprintf( "%s = %s", $properties[ $i ], $propertiesValues[ $i ] );
 		}
 
-		return $classInstance;
+		$columnIdName = HibernateUtil::getColumnIdName( $this->clazz );
+		$getColumnIdName = 'getId';
+		$this->sql = sprintf( 'UPDATE %s SET %s WHERE %s = %d',
+							  strtolower( HibernateUtil::getClassName( $this->clazz ) ),
+							  implode( $propertiesValues, ', ' ),
+							  $columnIdName,
+							  $object->$getColumnIdName() );
+
+		return ( $this->execute() );
+	}
+
+	private function getRestrictions() {
+		if( !isset( $this->restrictions ) ) {
+			$this->restrictions = 'WHERE ';
+		}
+
+		return $this->restrictions;
+	}
+
+	private function execute( $is_insert = false ) {
+		$result = $this->sessionFactory->query( $this->sql );
+
+		if( $result === false ) {
+			throw new HibernateException( $this->sessionFactory->error );
+		}
+
+		if( $is_insert ) {
+			$result = $this->sessionFactory->insert_id;
+		}
+
+		return $result;
 	}
 }
 ?>

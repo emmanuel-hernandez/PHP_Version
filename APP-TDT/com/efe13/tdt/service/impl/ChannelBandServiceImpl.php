@@ -5,6 +5,8 @@ require_once( getMVCPath( UPDATE_ENUM_PATH ) );
 require_once( getMVCPath( UTILS_PATH ) );
 require_once( getMVCPath( DTO_API_PATH ) );
 require_once( getMVCPath( QUERY_HELPER_PATH ) );
+require_once( getMVCPath( DAO_EXCEPTION_PATH ) );
+require_once( getMVCPath( VALIDATION_EXCEPTION_PATH ) );
 require_once( getMVCPath( MAPPEABLE_PATH ) );
 require_once( getAppPath( STATUS_RESULT_SERVICE_PATH ) );
 require_once( getAppPath( SERVICE_RESULT_PATH ) );
@@ -12,6 +14,8 @@ require_once( getAppPath( CHANNEL_BAND_SERVICE_PATH ) );
 
 use com\efe13\mvc\commons\api\enums\UpdateEnum;
 use com\efe13\mvc\commons\api\util\Utils;
+use com\efe13\mvc\commons\api\exception\Exception;
+use com\efe13\mvc\commons\api\exception\ValidationException;
 use com\efe13\mvc\commons\api\interfaces\Mappeable;
 use com\efe13\mvc\model\api\impl\helper\QueryHelper;
 use com\efe13\tdt\enums\StatusResultService;
@@ -33,7 +37,7 @@ class ChannelBandServiceImpl extends ChannelBandService {
 			$this->serviceResult = new ServiceResult();
 			
 			$channelBandDTO = parent::getById( $channelBandDTO );
-			if( $channelBandDTO != null ) {
+			if( !Utils::isNull( $channelBandDTO ) ) {
 				$this->resultMessage = null;
 				$this->serviceResult->setObject( $channelBandDTO );
 				$this->statusResultService = StatusResultService::STATUS_SUCCESS;
@@ -43,7 +47,7 @@ class ChannelBandServiceImpl extends ChannelBandService {
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( Exception $ex ) {
+		catch( \Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -65,7 +69,7 @@ class ChannelBandServiceImpl extends ChannelBandService {
 			$this->serviceResult->setCollection( $dtos );
 			$this->statusResultService = StatusResultService::STATUS_SUCCESS;
 		}
-		catch( Exception $ex ) {
+		catch( \Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -89,7 +93,7 @@ class ChannelBandServiceImpl extends ChannelBandService {
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( Exception $ex ) {
+		catch( \Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -101,9 +105,9 @@ class ChannelBandServiceImpl extends ChannelBandService {
 
 	public function update(Mappeable $channelBandDTO) {
 		try {
-			$this->serviceResult = new ServiceResult();
-			
 			$this->validateDTO( $channelBandDTO, UpdateEnum::IS_UPDATE );
+
+			$this->serviceResult = new ServiceResult();
 			if( parent::update( $channelBandDTO ) ) {
 				$this->resultMessage = "El canal se ha actualizado correctamente";
 				$this->statusResultService = StatusResultService::STATUS_SUCCESS;
@@ -113,11 +117,11 @@ class ChannelBandServiceImpl extends ChannelBandService {
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( Exception $ex ) {
+		catch( \Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
-		
+
 		$this->serviceResult->setMessage( $this->resultMessage );
 		$this->serviceResult->setStatusResult( $this->statusResultService );
 		return $this->serviceResult;
@@ -136,7 +140,7 @@ class ChannelBandServiceImpl extends ChannelBandService {
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( Exception $ex ) {
+		catch( \Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -160,13 +164,13 @@ class ChannelBandServiceImpl extends ChannelBandService {
 		
 		//Validate fields length
 		$lengthCheck = Utils::lengthCheck( $channelBandDto->getName(), self::$FIELD_MIN_LENGTH,  self::$NAME_FIELD_MAX_LENGTH );
-		$exceptionMessage = "El campo nombre es demasiado" + (( $lengthCheck < 0 ) ? " corto" : " largo");
+		$exceptionMessage = "El campo nombre es demasiado" . (( $lengthCheck < 0 ) ? " corto" : " largo");
 		if( $lengthCheck != 0 ) {
 			throw new ValidationException( $exceptionMessage );
 		}
 		
 		$lengthCheck = Utils::lengthCheck( $channelBandDto->getDescription(), self::$FIELD_MIN_LENGTH, self::$DESCRIPTION_FIELD_MAX_LENGTH );
-		$exceptionMessage = "El campo descripción es demasiado" + (( $lengthCheck < 0 ) ? " corto" : " largo");
+		$exceptionMessage = "El campo descripción es demasiado" . (( $lengthCheck < 0 ) ? " corto" : " largo");
 		if( $lengthCheck != 0 ) {
 			throw new ValidationException( $exceptionMessage );
 		}

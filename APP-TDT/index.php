@@ -55,15 +55,15 @@ use com\efe13\mvc\dao\api\impl\DAOAPI;
 */
 
 require_once( 'com/efe13/tdt/utils/AppPaths.php' );
-require_once( getAppPath( CHANNEL_BAND_CONTROLLER_PATH ) );
+require_once( getAppPath( CONCESSION_TYPE_CONTROLLER_PATH ) );
+require_once( getAppPath( CONCESSION_TYPE_DTO_PATH ) );
 require_once( getAppPath( PRINTER_PATH ) );
 
-use com\efe13\tdt\controller\ChannelBandController;
+use com\efe13\tdt\controller\ConcessionTypeController;
+use com\efe13\tdt\model\dto\ConcessionType;
 use com\efe13\tdt\utils\Printer;
 
 
-$controller = new ChannelBandController();
-$channels = $controller->getChannelBands();
 
 $printer = new Printer();
 $printer->output( $channels );

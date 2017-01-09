@@ -40,7 +40,7 @@ class ChannelBandController {
 			$channelBandDTO = new ChannelBandDTO();
 			$channelBandDTO->setId( $channelBandId );
 			
-			return $CHANNEL_BAND_SERVICE->getById( $channelBandDTO );
+			return self::$CHANNEL_BAND_SERVICE->getById( $channelBandDTO );
 		}
 		catch( Exception $ex ) {
 			return new ServiceResult( $ex->getMessage(), StatusResultService::STATUS_FAILED );
@@ -51,7 +51,7 @@ class ChannelBandController {
 	public function saveChannelBand( ChannelBandDTO $channelBandDTO ) {
 		try {
 			$channelBandDTO->setActive( ActiveEnum::ACTIVE );
-			return $CHANNEL_BAND_SERVICE->saveChannelBand( $channelBandDTO );
+			return self::$CHANNEL_BAND_SERVICE->saveChannelBand( $channelBandDTO );
 		}
 		catch( Exception $ex ) {
 			return new ServiceResult( $ex->getMessage(), StatusResultService::STATUS_FAILED );
@@ -61,10 +61,10 @@ class ChannelBandController {
 	//@RequestMapping( value="/{id}", method=RequestMethod.PUT )
 	public function updateChannelBand( $channelBandId, ChannelBandDTO $channelBandDTO ) {
 		try {
-			$serviceResult = getChannelBand( $channelBandId );
+			$serviceResult = $this->getChannelBand( $channelBandId );
 			if( $serviceResult->getStatusResult() == StatusResultService::STATUS_SUCCESS ) {
-				$serviceResult->getObject()->setId( $channelBandId );
-				return $CHANNEL_BAND_SERVICE->update( $channelBandDTO );
+				$channelBandDTO->setId( $channelBandId );
+				return self::$CHANNEL_BAND_SERVICE->update( $channelBandDTO );
 			}
 			
 			return $serviceResult;
@@ -78,9 +78,9 @@ class ChannelBandController {
 	//@RequestMapping( value="/{id}", method=RequestMethod.DELETE )
 	public function deleteChannelBand( $channelBandId ) {
 		try {
-			$serviceResult = getChannelBand( $channelBandId );
+			$serviceResult = $this->getChannelBand( $channelBandId );
 			if( $serviceResult->getStatusResult() == StatusResultService::STATUS_SUCCESS ) {
-				return $CHANNEL_BAND_SERVICE->delete( $serviceResult->getObject() );
+				return self::$CHANNEL_BAND_SERVICE->delete( $serviceResult->getObject() );
 			}
 			
 			return $serviceResult;

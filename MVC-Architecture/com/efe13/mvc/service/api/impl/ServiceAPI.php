@@ -40,9 +40,37 @@ abstract class ServiceAPI extends Utilities implements IService {
 	}
 	
 	public function map(Mappeable $source, Mappeable $destination) {
-		//$destination = new ModelMapper().map( $source, $destination.getClass() );
-		//return $destination;
-		die( $source );
+		$destinationClass = get_class( $destination );
+		$destination = new $destinationClass;
+
+		$methods = get_class_methods( $destinationClass );
+		if( empty( $methods ) ) {
+			throw new ServiceException( "Class has not methods defined" );
+		}
+
+		foreach( $methods as $method ) {
+			$prefix = substr( $method, 0, 3 );
+
+			if( strcasecmp( $prefix, 'set' ) == 0  ) {
+				$getMethod = 'get' . substr( $method, 3, strlen( $method ) );
+
+				if( method_exists( get_class( $destination ), $getMethod ) ) {
+					$destination->$method( $source->$getMethod() );
+				}
+				else {
+					$getMethod = 'is' . substr( $method, 3, strlen( $method ) );
+
+					if( method_exists( get_class( $destination ), $getMethod ) ) {
+						$destination->$method( $source->$getMethod() );
+					}
+					else {
+						throw new ServiceException( "Some methods in the destination class doesn't match with the source class" );
+					}
+				}
+			}
+		}
+
+		return $destination;
 	}
 }
 ?>

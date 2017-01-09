@@ -4,7 +4,9 @@ namespace com\efe13\tdt\service;
 require_once( getMVCPath( ACTIVE_ENUM_PATH ) );
 require_once( getMVCPath( UPDATE_ENUM_PATH ) );
 require_once( getMVCPath( VALIDATION_EXCEPTION_PATH ) );
+require_once( getMVCPath( DAO_EXCEPTION_PATH ) );
 require_once( getMVCPath( MAPPEABLE_PATH ) );
+require_once( getMVCPath( UTILS_PATH ) );
 require_once( getMVCPath( ENTITY_API_PATH ) );
 require_once( getMVCPath( QUERY_HELPER_PATH ) );
 require_once( getMVCPath( SERVICE_API_PATH ) );
@@ -15,7 +17,9 @@ require_once( getAppPath( CHANNEL_BAND_PATH ) );
 use com\efe13\mvc\commons\api\enums\ActiveEnum;
 use com\efe13\mvc\commons\api\enums\UpdateEnum;
 use com\efe13\mvc\commons\api\exception\ValidationException;
+use com\efe13\mvc\commons\api\exception\DAOException;
 use com\efe13\mvc\commons\api\interfaces\Mappeable;
+use com\efe13\mvc\commons\api\util\Utils;
 use com\efe13\mvc\model\api\impl\entity\EntityAPI;
 use com\efe13\mvc\model\api\impl\QueryHelper;
 use com\efe13\mvc\service\api\impl\ServiceAPI;
@@ -36,22 +40,24 @@ class ChannelBandService extends ServiceAPI {
 		$entity = new ChannelBand();
 		
 		try {
-			$entity = $this->map( $dto, $entity );
-			$entity = self::$CHANNEL_BAND_DAO->getById( entity );
+			$entity = $entity = $this->map( $dto, $entity );
+			$entity = self::$CHANNEL_BAND_DAO->getById( $entity );
 		}
-		catch( Exception $ex ) {
+		catch( DAOException $ex ) {
+			throw $ex;
 		}
 		
-		if( $entity == null )
+		if( Utils::isNull( $entity ) ) {
 			return null;
+		}
 		
-		return $this->map( $entity, $dto );	
+		return ( $this->map( $entity, $dto ) );
 	}
 
 	//@Override
 	public function getAll(QueryHelper $queryHelper = null) {
 		$dtos = array();
-		
+
 		try {
 			$entities = self::$CHANNEL_BAND_DAO->getAll( $queryHelper );
 
@@ -63,7 +69,8 @@ class ChannelBandService extends ServiceAPI {
 				}
 			}
 		}
-		catch( Exception $ex ) {
+		catch( DAOException $ex ) {
+			throw $ex;
 		}
 		
 		return $dtos;
@@ -73,10 +80,10 @@ class ChannelBandService extends ServiceAPI {
 	public function save(Mappeable $channelBandDTO) {
 		try {
 			$channelBand = $this->map( $channelBandDTO, new ChannelBand() );
-			return self::$CHANNEL_BAND_DAO->save( $channelBand );
+			return (self::$CHANNEL_BAND_DAO->save( $channelBand ) );
 		}
-		catch( Exception $ex ) {
-			throw new Exception( $ex->getMessage() );
+		catch( DAOException $ex ) {
+			throw $ex;
 		}
 	}
 
@@ -84,10 +91,10 @@ class ChannelBandService extends ServiceAPI {
 	public function update(Mappeable $channelBandDTO) {
 		try {
 			$channelBand = $this->map( $channelBandDTO, new ChannelBand() );
-			return self::$CHANNEL_BAND_DAO->update( $channelBand );
+			return ( self::$CHANNEL_BAND_DAO->update( $channelBand ) );
 		}
-		catch( Exception $ex ) {
-			throw new Exception( $ex->getMessage() );
+		catch( DAOException $ex ) {
+			throw $ex;
 		}
 	}
 
@@ -95,10 +102,10 @@ class ChannelBandService extends ServiceAPI {
 	public function delete(Mappeable $channelBandDTO) {
 		try {
 			$channelBandDTO->setActive( ActiveEnum::INACTIVE );
-			return $this->update( $channelBandDTO );
+			return ( $this->update( $channelBandDTO ) );
 		}
-		catch( Exception $ex ) {
-			throw new Exception( $ex->getMessage() );
+		catch( DAOException $ex ) {
+			throw $ex;
 		}
 	}
 

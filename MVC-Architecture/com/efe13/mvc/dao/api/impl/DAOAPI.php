@@ -8,6 +8,7 @@ import org.hibernate.criterion.Restrictions;
 
 require_once( dirname( dirname( dirname(__DIR__) ) ) . '/commons/api/enums/ActiveEnum.php' );
 require_once( dirname( dirname( dirname(__DIR__) ) ) . '/commons/api/exception/DAOException.php' );
+require_once( dirname( dirname( dirname(__DIR__) ) ) . '/commons/api/exception/HibernateException.php' );
 require_once( dirname( dirname( dirname(__DIR__) ) ) . '/commons/api/util/Utils.php' );
 require_once( dirname(__DIR__) . '/IDAO.php' );
 require_once( 'util/HibernateUtil.php' );
@@ -17,6 +18,7 @@ require_once( dirname( dirname( dirname(__DIR__) ) ) . '/model/api/impl/QueryHel
 
 use com\efe13\mvc\commons\api\enums\ActiveEnum;
 use com\efe13\mvc\commons\api\exception\DAOException;
+use com\efe13\mvc\commons\api\exception\HibernateException;
 use com\efe13\mvc\commons\api\util\Utils;
 use com\efe13\mvc\dao\api\IDAO;
 use com\efe13\mvc\dao\api\impl\util\HibernateUtil;
@@ -46,10 +48,11 @@ abstract class DAOAPI implements IDAO {
 	
 	//@Override
 	public function getTotalRecords() {
+		//echo 'gettingTotalRecords...<br>';
 		try {
 			$object = $this->getCriteria()
 				->setProjection( Projections::rowCount() )
-				->add( Restrictions::eq( $columnNameForActiveElement, ActiveEnum::ACTIVE ) )
+				->add( Restrictions::eq( $this->columnNameForActiveElement, ActiveEnum::ACTIVE ) )
 				->uniqueResult();
 			
 			if( !Utils::isNull( $object ) ) {
@@ -59,7 +62,7 @@ abstract class DAOAPI implements IDAO {
 			return 0;
 		}
 		catch( DAOException $ex ) {
-			throw new DAOException( $ex );
+			throw new DAOException( $ex->getMessage() );
 		}
 		finally {
 			$this->$this->closeSession();
@@ -68,12 +71,17 @@ abstract class DAOAPI implements IDAO {
 
 	//@Override
 	public function getById(Mappeable $object) {
+		//echo 'gettingById...<br>';
 		try {
 			$criteria = $this->getCriteria()
-				->add( Restrictions::idEq( $object->getId() ) )
-				->add( Restrictions::eq( $columnNameForActiveElement, $this->activeEnum ) );
+				->add( Restrictions::idEq( $this->criteriaClass, $object->getId() ) )
+				->add( Restrictions::eq( $this->columnNameForActiveElement, $this->activeEnum ) );
 			
-			return $criteria->uniqueResult();
+			$object = $criteria->uniqueResult();
+			return $object;
+		}
+		catch( HibernateException $ex ) {
+			throw new DAOException( $ex->getMessage() );
 		}
 		finally {
 			$this->closeSession();
@@ -82,9 +90,10 @@ abstract class DAOAPI implements IDAO {
 	
 	//@Override
 	public function getAll(QueryHelper $helper = null) {
+		//echo 'gettingAll...<br>';
 		try {
 			if( !Utils::isNull( $helper ) && !($helper instanceof QueryHelper) ) {
-				throw new RuntimeException( "Query Helper expected!" );
+				throw new HibernateException( "Query Helper expected!" );
 			}
 			
 			$criteria = $this->getCriteria()
@@ -103,7 +112,10 @@ abstract class DAOAPI implements IDAO {
 				}
 			}
 			
-			return $criteria->lisst();
+			return $criteria->listAll();
+		}
+		catch( \Exception $ex ) {
+			throw new DAOException( $ex->getMessage() );
 		}
 		finally {
 			$this->closeSession();
@@ -112,13 +124,14 @@ abstract class DAOAPI implements IDAO {
 	
 	//@Override
 	public function save(Mappeable $object) {
-		$session = $this->getSession();
+		//echo 'Guardando...<br>';
+		$session = $this->getCriteria();
 		$generatedId = 0;
 		
 		try {
 			$generatedId = $session->save( $object );
 		}
-		catch( DAOException $ex ) {
+		catch( HibernateException $ex ) {
 			throw new DAOException( $ex->getMessage() );
 		}
 		finally {
@@ -130,13 +143,14 @@ abstract class DAOAPI implements IDAO {
 	
 	//@Override
 	public function update(Mappeable $object) {
-		$session = $this->getSession();
+		//echo 'Actualizando...<br>';
+		$session = $this->getCriteria();
 		
 		try {
 			$session->update( $object );
 			return true;
 		}
-		catch( DAOException $ex ) {
+		catch( HibernateException $ex ) {
 			throw new DAOException( $ex->getMessage() );
 		}
 		finally {
@@ -146,13 +160,13 @@ abstract class DAOAPI implements IDAO {
 	
 	//@Override
 	public function delete(Mappeable $object) {
-		$session = $this->getSession();
+		//$session = $this->getSession();
 		
 		try {
 			$session->delete( $object );
 			return true;
 		}
-		catch( DAOException $ex ) {
+		catch( HibernateException $ex ) {
 			throw new DAOException( $ex->getMessage() );
 		}
 		finally {
@@ -161,34 +175,18 @@ abstract class DAOAPI implements IDAO {
 	}
 		
 	protected final function closeSession() {
-		/*if( $sessionFactory != null && !$sessionFactory.isClosed() ) {
-			$sessionFactory.close();
-		}*/
+		//echo 'sessionCerrada<br>';
+		$this->sessionFactory->close();
 	}
 
 	protected function getCriteria($alias = '_this') {
+		$this->sessionFactory->openSession();
 		return $this->getSession()->createCriteria( $this->criteriaClass, $alias );
 	}
 	
 	private final function getSession() {
+		//echo 'sessionAbierta<br>';
 		return $this->sessionFactory->openSession();
 	}
-	
-	/*
-	private final void createSessionFactory() {
-		if( $sessionFactory == null ) {
-			final StandardServiceRegistry registry = new StandardServiceRegistryBuilder().configure().build();
-			
-			try {
-				$sessionFactory = new MetadataSources( registry ).buildMetadata().buildSessionFactory();
-			}
-			catch( Exception ex ) {
-				StandardServiceRegistryBuilder.destroy( registry );
-				log.error( ex.getMessage(), ex );
-				throw ex;
-			}
-		}
-	}
-	*/
 }
 ?>
