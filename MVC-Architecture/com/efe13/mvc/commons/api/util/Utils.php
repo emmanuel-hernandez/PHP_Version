@@ -20,8 +20,15 @@ final class Utils {
 		return $object == null;
 	}
 	
-	public static function isEmpty($str) {
-		return self::isNull( $str ) || strlen( trim( $str ) ) == 0;
+	public static function isEmpty($object) {
+		if( is_array( $object ) ) {
+			return ( count( $object ) <= 0 );
+		}
+		else if( is_string( $object ) ) {
+			return self::isNull( $object ) || strlen( trim( $object ) ) == 0;
+		}
+
+		return true;
 	}
 	
 	public static function lengthCheck($str, $minLength, $maxLength) {
