@@ -8,15 +8,16 @@ use com\efe13\mvc\commons\api\util\Utils;
 use com\efe13\mvc\dao\api\impl\util\HibernateUtil;
 
 final class Restrictions {
-	
-	private $criteriaClass = null;
 
 	public static function eq($column, $value) {
-		return sprintf( 'AND %s = %s', $column, $value );
+		$value = Utils::isNull( $value ) ? 'null' : $value;
+		$value = is_string( $value ) ? sprintf( "'%s'", $value ) : $value;
+		return sprintf( '%s = %s', $column, $value );
 	}
 
 	public static function idEq($criteriaClass, $value) {
 		$value = Utils::isNull( $value ) ? 'null' : $value;
+
 		return sprintf( '%s = %s', HibernateUtil::getColumnIdName($criteriaClass), $value );
 	}
 }

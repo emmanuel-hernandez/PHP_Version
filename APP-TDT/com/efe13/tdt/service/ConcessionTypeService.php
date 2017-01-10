@@ -11,7 +11,7 @@ require_once( getMVCPath( QUERY_HELPER_PATH ) );
 require_once( getMVCPath( SERVICE_API_PATH ) );
 require_once( getMVCPath( UTILS_PATH ) );
 require_once( getAppPath( CONCESSION_TYPE_DAO_PATH ) );
-require_once( getAppPath( CONCESSION_TYPE_DTO_PATH ) );
+require_once( getAppPath( MAPPEABLE_PATH ) );
 require_once( getAppPath( CONCESSION_TYPE_PATH ) );
 
 use com\efe13\mvc\commons\api\enums\ActiveEnum;
@@ -19,7 +19,7 @@ use com\efe13\mvc\commons\api\enums\UpdateEnum;
 use com\efe13\mvc\commons\api\exception\ValidationException;
 use com\efe13\mvc\commons\api\exception\DAOException;
 use com\efe13\mvc\commons\api\util\Utils;
-use com\efe13\mvc\model\api\impl\dto\DTOAPI;
+use com\efe13\mvc\commons\api\interfaces\Mappeable;
 use com\efe13\mvc\model\api\impl\entity\EntityAPI;
 use com\efe13\mvc\model\api\impl\QueryHelper;
 use com\efe13\mvc\service\api\impl\ServiceAPI;
@@ -29,8 +29,12 @@ use com\efe13\tdt\model\entity\ConcessionType;
 
 class ConcessionTypeService extends ServiceAPI {
 	
-	private static $CONCESSION_TYPE_DAO = new ConcessionTypeDAO();
+	private static $CONCESSION_TYPE_DAO;
 	
+	public function __construct() {
+		self::$CONCESSION_TYPE_DAO = new ConcessionTypeDAO();
+	}
+
 	//@Override
 	public function getTableCount() {
 		try {
@@ -42,7 +46,7 @@ class ConcessionTypeService extends ServiceAPI {
 	}
 	
 	//@Override
-	public function getById( DTOAPI $dto ) {
+	public function getById(Mappeable $dto) {
 		$entity = new ConcessionType();
 		
 		try {
@@ -65,28 +69,27 @@ class ConcessionTypeService extends ServiceAPI {
 		$dtos = array();
 		
 		try {
-			$entities = self::$CONCESSION_TYPE_DAO->getAll( queryHelper );
+			$entities = self::$CONCESSION_TYPE_DAO->getAll( $queryHelper );
 			if( count( $entities ) > 0 ) {
 				$dtos = array();
-				for( $entity : $entities ) {
+				foreach( $entities as $entity ) {
 					$dtos[] = $this->map( $entity, new ConcessionTypeDTO() );
 				}
 			}
 		}
 		catch( DAOException $ex ) {
 			throw $ex;
-			
 		}
 		
 		return $dtos;
 	}
 
-	public function findByName(DTOAPI $concessionTypeDTO) {
+	public function findByName(Mappeable $concessionTypeDTO) {
 		$entity = new ConcessionType();
 		$id = 0;
 		
 		try {
-			$entity = map( $concessionTypeDTO, $entity );
+			$entity = $this->map( $concessionTypeDTO, $entity );
 			$id = self::$CONCESSION_TYPE_DAO->findByName( $entity );
 		}
 		catch( DAOException $ex ) {
@@ -97,10 +100,10 @@ class ConcessionTypeService extends ServiceAPI {
 	}
 	
 	//@Override
-	public function save(DTOAPI $concessionTypeDTO) {
+	public function save(Mappeable $concessionTypeDTO) {
 		try {
-			$concessionType = map( $concessionTypeDTO, new ConcessionType() );
-			return ( self::$CONCESSION_TYPE_DAO->save( concessionType ) );
+			$concessionType = $this->map( $concessionTypeDTO, new ConcessionType() );
+			return ( self::$CONCESSION_TYPE_DAO->save( $concessionType ) );
 		}
 		catch( DAOException $ex ) {
 			throw $ex;
@@ -108,9 +111,9 @@ class ConcessionTypeService extends ServiceAPI {
 	}
 
 	//@Override
-	public function update(DTOAPI $concessionTypeDTO) {
+	public function update(Mappeable $concessionTypeDTO) {
 		try {
-			$concessionType = (map( $concessionTypeDTO, new ConcessionType() ) );
+			$concessionType = ($this->map( $concessionTypeDTO, new ConcessionType() ) );
 			return ( self::$CONCESSION_TYPE_DAO->update( $concessionType ) );
 		}
 		catch( DAOException $ex ) {
@@ -119,7 +122,7 @@ class ConcessionTypeService extends ServiceAPI {
 	}
 
 	//@Override
-	public function delete(DTOAPI $concessionTypeDTO) {
+	public function delete(Mappeable $concessionTypeDTO) {
 		try {
 			$concessionTypeDTO->setActive( ActiveEnum::INACTIVE );
 			return ( $this->update( $concessionTypeDTO ) );
@@ -130,12 +133,12 @@ class ConcessionTypeService extends ServiceAPI {
 	}
 
 	//@Override
-	public function validateDTO(DTOAPI $dto, $update) {
+	public function validateDTO(Mappeable $dto, $update) {
 		throw new ValidationException( "This method has not implementation\ It needs to be implemented by the concrete class" );
 	}
 
 	//@Override
-	public function sanitizeDTO(DTOAPI $dto) {
+	public function sanitizeDTO(Mappeable $dto) {
 		throw new ValidationException( "This method has not implementation\ It needs to be implemented by the concrete class" );	
 	}
 }

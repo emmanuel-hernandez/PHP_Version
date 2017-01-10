@@ -15,6 +15,7 @@ final class Criteria {
 	private $clazz;
 	private $sql;
 	private $restrictions;
+	private $projection;
 
 	private static $IS_INSERT = true;
 
@@ -33,7 +34,17 @@ final class Criteria {
 	}
 
 	public function add($restriction) {
+		if( !Utils::isNull( $this->restrictions ) ) {
+			$this->restrictions = sprintf( '%s %s', $this->getRestrictions(), 'AND ' );
+		}
+
 		$this->restrictions = sprintf( '%s %s', $this->getRestrictions(), $restriction );
+
+		return $this;
+	}
+
+	public function setProjection($projection) {
+		$this->projection = $projection;
 
 		return $this;
 	}
@@ -41,7 +52,7 @@ final class Criteria {
 	public function listAll() {
 		$objects = null;
 		$this->sql = sprintf( 'SELECT %s FROM %s', 
-							  implode( HibernateUtil::getPropertiesClass( $this->clazz ), ', ' ),
+							  $this->getProjection(),
 							  strtolower( HibernateUtil::getClassName( $this->clazz ) ) );
 
 		$result = $this->execute();
@@ -54,7 +65,7 @@ final class Criteria {
 
 	public function uniqueResult() {
 		$this->sql = sprintf( 'SELECT %s FROM %s',
-							  implode( HibernateUtil::getPropertiesClass( $this->clazz ), ', ' ),
+							  $this->getProjection(),
 							  strtolower( HibernateUtil::getClassName( $this->clazz ) ) );
 
 		if( !Utils::isNull( $this->restrictions != null ) ) {
@@ -69,7 +80,15 @@ final class Criteria {
 			throw new HibernateException( 'Result set is not a unique result' );
 		}
 
-		return HibernateUtil::buildObject( $this->clazz, $result->fetch_array( MYSQLI_ASSOC ) );
+		$projections = array();
+		$projections = explode( ',', $this->getProjection() );
+		if( count( $projections ) > 1 ) {
+			return HibernateUtil::buildObject( $this->clazz, $result->fetch_array( MYSQLI_ASSOC ) );
+		}
+		else {
+			$reg = $result->fetch_array( MYSQLI_ASSOC );
+			return $reg[ $this->getProjection() ];
+		}
 	}
 
 	public function save($object) {
@@ -109,8 +128,21 @@ final class Criteria {
 		return ( $this->execute() );
 	}
 
+	private function getProjection() {
+		$projection = '';
+
+		if( !Utils::isNull( $this->projection ) ) {
+			$projection = $this->projection;
+		}
+		else {
+			$projection = implode( HibernateUtil::getPropertiesClass( $this->clazz ), ', ' );
+		}
+
+		return $projection;
+	}
+
 	private function getRestrictions() {
-		if( !isset( $this->restrictions ) ) {
+		if( Utils::isNull( $this->restrictions ) ) {
 			$this->restrictions = 'WHERE ';
 		}
 
@@ -118,6 +150,7 @@ final class Criteria {
 	}
 
 	private function execute( $is_insert = false ) {
+		echo( $this->sql . '<br><br>');
 		$result = $this->sessionFactory->query( $this->sql );
 
 		if( $result === false ) {

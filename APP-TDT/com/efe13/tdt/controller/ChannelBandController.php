@@ -7,6 +7,7 @@ require_once( getAppPath( STATUS_RESULT_SERVICE_PATH ) );
 require_once( getAppPath( SERVICE_RESULT_PATH ) );
 require_once( getAppPath( CHANNEL_BAND_DTO_PATH ) );
 require_once( getAppPath( CHANNEL_BAND_SERVICE_IMPL_PATH ) );
+require_once( getAppPath( APP_UTILS_PATH ) );
 
 use com\efe13\mvc\commons\api\enums\ActiveEnum;
 use com\efe13\mvc\model\api\impl\helper\QueryHelper;
@@ -14,6 +15,7 @@ use com\efe13\tdt\enums\StatusResultService;
 use com\efe13\tdt\helper\ServiceResult;
 use com\efe13\tdt\model\dto\ChannelBandDTO;
 use com\efe13\tdt\service\impl\ChannelBandServiceImpl;
+use com\efe13\tdt\utils\AppUtils;
 
 //@RequestMapping( "/channelBand" )
 class ChannelBandController {
@@ -30,7 +32,7 @@ class ChannelBandController {
 			return self::$CHANNEL_BAND_SERVICE->listAll( $queryHelper );
 		}
 		catch( Exception $ex ) {
-			return new ServiceResult( $ex->getMessage(), StatusResultService::STATUS_FAILED );
+			return AppUtils::createResultServiceByMessageAndStatus( $ex->getMessage(), StatusResultService::STATUS_FAILED );
 		}
 	}
 	
@@ -43,7 +45,7 @@ class ChannelBandController {
 			return self::$CHANNEL_BAND_SERVICE->getById( $channelBandDTO );
 		}
 		catch( Exception $ex ) {
-			return new ServiceResult( $ex->getMessage(), StatusResultService::STATUS_FAILED );
+			return AppUtils::createResultServiceByMessageAndStatus( $ex->getMessage(), StatusResultService::STATUS_FAILED );
 		}
 	}
 	
@@ -54,7 +56,7 @@ class ChannelBandController {
 			return self::$CHANNEL_BAND_SERVICE->saveChannelBand( $channelBandDTO );
 		}
 		catch( Exception $ex ) {
-			return new ServiceResult( $ex->getMessage(), StatusResultService::STATUS_FAILED );
+			return AppUtils::createResultServiceByMessageAndStatus( $ex->getMessage(), StatusResultService::STATUS_FAILED );
 		}
 	}
 	
@@ -70,7 +72,7 @@ class ChannelBandController {
 			return $serviceResult;
 		}
 		catch( Exception $ex ) {
-			return new ServiceResult( $ex->getMessage(), StatusResultService::STATUS_FAILED );
+			return AppUtils::createResultServiceByMessageAndStatus( $ex->getMessage(), StatusResultService::STATUS_FAILED );
 		}
 
 	}
@@ -86,7 +88,7 @@ class ChannelBandController {
 			return $serviceResult;
 		}
 		catch( Exception $ex ) {
-			return new ServiceResult( $ex->getMessage(), StatusResultService::STATUS_FAILED );
+			return AppUtils::createResultServiceByMessageAndStatus( $ex->getMessage(), StatusResultService::STATUS_FAILED );
 		}
 
 	}

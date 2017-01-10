@@ -55,16 +55,29 @@ use com\efe13\mvc\dao\api\impl\DAOAPI;
 */
 
 require_once( 'com/efe13/tdt/utils/AppPaths.php' );
-require_once( getAppPath( CONCESSION_TYPE_CONTROLLER_PATH ) );
-require_once( getAppPath( CONCESSION_TYPE_DTO_PATH ) );
+require_once( getAppPath( STATE_CONTROLLER_PATH ) );
+require_once( getAppPath( STATE_DTO_PATH ) );
 require_once( getAppPath( PRINTER_PATH ) );
 
-use com\efe13\tdt\controller\ConcessionTypeController;
-use com\efe13\tdt\model\dto\ConcessionType;
+use com\efe13\tdt\controller\StateController;
+use com\efe13\tdt\model\dto\StateDTO;
 use com\efe13\tdt\utils\Printer;
 
+$controller = new StateController();
 
+//$objects = $controller->getStates();
+//$objects = $controller->getState( 20 );
+
+$object = new StateDTO();
+$object->setId( 33 );
+$object->setName( 'DSS NYC' );
+$object->setShortName( 'WWW' );
+$object->setActive( true );
+//$objects = $controller->saveState( $object );
+//$objects = $controller->updateState( 33, $object );
+
+$objects = $controller->deleteState( 33 );
 
 $printer = new Printer();
-$printer->output( $channels );
+$printer->output( $objects );
 ?>

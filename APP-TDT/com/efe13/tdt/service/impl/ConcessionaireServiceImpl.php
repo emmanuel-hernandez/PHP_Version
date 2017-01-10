@@ -3,51 +3,52 @@ namespace com\efe13\tdt\service\impl;
 
 require_once( getMVCPath( UPDATE_ENUM_PATH ) );
 require_once( getMVCPath( UTILS_PATH ) );
-require_once( getMVCPath( DTO_API_PATH ) );
-require_once( getMVCPath( QUERY_HELPER_PATH ) );
+require_once( getMVCPath( MAPPEABLE_PATH ) );
 require_once( getMVCPath( DAO_EXCEPTION_PATH ) );
 require_once( getMVCPath( VALIDATION_EXCEPTION_PATH ) );
-require_once( getMVCPath( MAPPEABLE_PATH ) );
+require_once( getMVCPath( DTO_API_PATH ) );
+require_once( getMVCPath( QUERY_HELPER_PATH ) );
 require_once( getAppPath( STATUS_RESULT_SERVICE_PATH ) );
 require_once( getAppPath( SERVICE_RESULT_PATH ) );
-require_once( getAppPath( CHANNEL_BAND_SERVICE_PATH ) );
+require_once( getAppPath( CONCESSIONAIRE_DTO_PATH ) );
+require_once( getAppPath( CONCESSIONAIRE_SERVICE_PATH ) );
 
 use com\efe13\mvc\commons\api\enums\UpdateEnum;
 use com\efe13\mvc\commons\api\util\Utils;
-use com\efe13\mvc\commons\api\exception\Exception;
-use com\efe13\mvc\commons\api\exception\ValidationException;
 use com\efe13\mvc\commons\api\interfaces\Mappeable;
+use com\efe13\mvc\commons\api\exception\ValidationException;
+use com\efe13\mvc\model\api\impl\dto\DTOAPI;
 use com\efe13\mvc\model\api\impl\helper\QueryHelper;
 use com\efe13\tdt\enums\StatusResultService;
 use com\efe13\tdt\helper\ServiceResult;
-use com\efe13\tdt\service\ChannelBandService;
+use com\efe13\tdt\model\dto\ConcessionaireDTO;
+use com\efe13\tdt\service\ConcessionaireService;
 
-class ChannelBandServiceImpl extends ChannelBandService {
-
+class ConcessionaireServiceImpl extends ConcessionaireService {
+	
 	private $serviceResult = null;
 	private $resultMessage;
 	private $statusResultService;
 	
-	private static $FIELD_MIN_LENGTH = 2;
-	private static $NAME_FIELD_MAX_LENGTH = 3;
-	private static $DESCRIPTION_FIELD_MAX_LENGTH = 10;
+	private static $FIELD_MIN_LENGTH = 3;
+	private static $NAME_FIELD_MAX_LENGTH = 100;
 	
-	public function getById( Mappeable $channelBandDTO ) {
+	public function getById(Mappeable $concessionaireDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
 			
-			$channelBandDTO = parent::getById( $channelBandDTO );
-			if( !Utils::isNull( $channelBandDTO ) ) {
+			$concessionaireDTO = parent::getById( $concessionaireDTO );
+			if( $concessionaireDTO != null ) {
 				$this->resultMessage = null;
-				$this->serviceResult->setObject( $channelBandDTO );
+				$this->serviceResult->setObject( $concessionaireDTO );
 				$this->statusResultService = StatusResultService::STATUS_SUCCESS;
 			}
 			else {
-				$this->resultMessage = "El canal especificado no existe";
+				$this->resultMessage = "La concesionaria especificada no existe";
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( \Exception $ex ) {
+		catch( Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -57,19 +58,24 @@ class ChannelBandServiceImpl extends ChannelBandService {
 		return $this->serviceResult;
 	}
 
-	public function listAll( QueryHelper $serviceRequest = null ) {
+	public function listAll(QueryHelper $queryHelper = null) {
 		try {
 			$this->serviceResult = new ServiceResult();
 			
 			$dtos = array();
-			foreach( parent::getAll( $serviceRequest ) as $dto ) {
+			foreach( parent::getAll( $queryHelper ) as $dto ) {
 				$dtos[] = $dto;
 			}
+			
+			$defaultConcessionaire = new ConcessionaireDTO();
+			$defaultConcessionaire->setId( -1 );
+			$defaultConcessionaire->setName( "Seleccionar..." );
+			array_unshift( $dtos, $defaultConcessionaire );
 			
 			$this->serviceResult->setCollection( $dtos );
 			$this->statusResultService = StatusResultService::STATUS_SUCCESS;
 		}
-		catch( \Exception $ex ) {
+		catch( Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -79,21 +85,21 @@ class ChannelBandServiceImpl extends ChannelBandService {
 		return $this->serviceResult;
 	}
 
-	public function saveChannelBand(Mappeable $channelBandDTO) {
+	public function saveConcessionaire(Mappeable $concessionaireDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
 			
-			$this->validateDTO( $channelBandDTO, UpdateEnum::IS_NOT_UPDATE );
-			if( parent::save( $channelBandDTO ) > 0 ) {
-				$this->resultMessage = "El canal se ha guardado correctamente";
+			$this->validateDTO( $concessionaireDTO, UpdateEnum::IS_NOT_UPDATE );
+			if( parent::save( $concessionaireDTO ) > 0 ) {
+				$this->resultMessage = "La concesionaria se ha guardado correctamente";
 				$this->statusResultService = StatusResultService::STATUS_SUCCESS;
 			}
 			else {
-				$this->resultMessage = "No se pudo guardar el canal";
+				$this->resultMessage = "No se pudo guardar la concesionaria";
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( \Exception $ex ) {
+		catch( Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -103,44 +109,44 @@ class ChannelBandServiceImpl extends ChannelBandService {
 		return $this->serviceResult;
 	}
 
-	public function update(Mappeable $channelBandDTO) {
+	public function update(Mappeable $concessionaireDTO) {
 		try {
-			$this->validateDTO( $channelBandDTO, UpdateEnum::IS_UPDATE );
-
 			$this->serviceResult = new ServiceResult();
-			if( parent::update( $channelBandDTO ) ) {
-				$this->resultMessage = "El canal se ha actualizado correctamente";
+			
+			$this->validateDTO( $concessionaireDTO, UpdateEnum::IS_UPDATE );
+			if( parent::update( $concessionaireDTO ) ) {
+				$this->resultMessage = "La concesionaria se ha actualizado correctamente";
 				$this->statusResultService = StatusResultService::STATUS_SUCCESS;
 			}
 			else {
-				$this->resultMessage = "No se pudo actualizar el canal";;
+				$this->resultMessage = "No se pudo actualizar la concesionaria";;
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( \Exception $ex ) {
+		catch( Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
-
+		
 		$this->serviceResult->setMessage( $this->resultMessage );
 		$this->serviceResult->setStatusResult( $this->statusResultService );
 		return $this->serviceResult;
 	}
 
-	public function delete(Mappeable $channelBandDTO) {
+	public function delete(Mappeable $concessionaireDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
 			
-			if( parent::delete( $channelBandDTO ) ) {
-				$this->resultMessage = "El canal se ha eliminado correctamente";
+			if( parent::delete( $concessionaireDTO ) ) {
+				$this->resultMessage = "La concesionaria se ha eliminado correctamente";
 				$this->statusResultService = StatusResultService::STATUS_SUCCESS;
 			}
 			else {
-				$this->resultMessage = "No se pudo eliminar el canal";
+				$this->resultMessage = "No se pudo eliminar la concesionaria";;
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( \Exception $ex ) {
+		catch( Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -151,50 +157,41 @@ class ChannelBandServiceImpl extends ChannelBandService {
 	}
 	
 	//@Override
-	public function validateDTO( Mappeable $dto, $update ) {
-		$channelBandDto = $this->sanitizeDTO( $dto );
+	public function validateDTO(Mappeable $dto, $update ) {
+		$concessionaireDto = $this->sanitizeDTO( $dto );
 
 		//Validate empty fields
-		if( Utils::isEmpty( $channelBandDto->getName() ) ) {
+		if( Utils::isEmpty( $concessionaireDto->getName() ) ) {
 			throw new ValidationException( "El campo nombre es requerido" );
-		}
-		if( Utils::isEmpty( $channelBandDto->getDescription() ) ) {
-			throw new ValidationException( "El campo descripción es requerido" );
 		}
 		
 		//Validate fields length
-		$lengthCheck = Utils::lengthCheck( $channelBandDto->getName(), self::$FIELD_MIN_LENGTH,  self::$NAME_FIELD_MAX_LENGTH );
-		$exceptionMessage = "El campo nombre es demasiado" . (( $lengthCheck < 0 ) ? " corto" : " largo");
-		if( $lengthCheck != 0 ) {
-			throw new ValidationException( $exceptionMessage );
-		}
-		
-		$lengthCheck = Utils::lengthCheck( $channelBandDto->getDescription(), self::$FIELD_MIN_LENGTH, self::$DESCRIPTION_FIELD_MAX_LENGTH );
-		$exceptionMessage = "El campo descripción es demasiado" . (( $lengthCheck < 0 ) ? " corto" : " largo");
+		$lengthCheck = Utils::lengthCheck( $concessionaireDto->getName(), self::$FIELD_MIN_LENGTH, self::$NAME_FIELD_MAX_LENGTH ); 
+		$exceptionMessage = "El campo nombre es demasiado" + (( $lengthCheck < 0 ) ? " corto" : " largo");
 		if( $lengthCheck != 0 ) {
 			throw new ValidationException( $exceptionMessage );
 		}
 		
 		//Validate repeated
-		$channelBandDTOs = $this->listAll( null )->getCollection();
-		foreach( $channelBandDTOs as $channelBand ) {
-			if( $channelBand->isActive() ) {
-				if( $update && $channelBand->getId() == $channelBandDto->getId() ) {
-					continue;
-				}
-				if( strcasecmp( $channelBand->getName(), $channelBandDto->getName() ) == 0 ) {
-					throw new ValidationException( "Ya existe una banda con el mismo nombre" );
-				}
+		$idFound = parent::findByName( $concessionaireDto );
+		if( $idFound > 0 ) {
+			$exceptionMessage = "Ya existe una concesionaria con el mismo nombre";
+			if( $update == UpdateEnum::IS_NOT_UPDATE ) {
+				throw new ValidationException( $exceptionMessage );
+			}
+			if( $update == UpdateEnum::IS_UPDATE && ( $idFound != $concessionaireDto->getId() ) ) {
+				throw new ValidationException( $exceptionMessage );
 			}
 		}
 	}
 
 	//@Override
-	public function sanitizeDTO(Mappeable $channelBandDTO) {
-		$channelBandDTO->setName( Utils::toUpperCase( $channelBandDTO->getName() ) );
-		$channelBandDTO->setDescription( Utils::toUpperCase( $channelBandDTO->getDescription() ) );
+	public function sanitizeDTO(Mappeable $dto) {
+		$concessionaireDTO = $dto;
+
+		$concessionaireDTO->setName( Utils::toUpperCase( $concessionaireDTO->getName() ) );
 		
-		return $channelBandDTO;
+		return $concessionaireDTO;
 	}
 }
 ?>

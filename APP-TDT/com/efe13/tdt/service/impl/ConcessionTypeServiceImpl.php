@@ -2,9 +2,18 @@
 namespace com\efe13\tdt\service\impl;
 
 require_once( getMVCPath( UPDATE_ENUM_PATH ) );
+require_once( getMVCPath( UTILS_PATH ) );
+require_once( getMVCPath( MAPPEABLE_PATH ) );
+require_once( getMVCPath( DTO_API_PATH ) );
+require_once( getMVCPath( QUERY_HELPER_PATH ) );
+require_once( getAppPath( STATUS_RESULT_SERVICE_PATH ) );
+require_once( getAppPath( SERVICE_RESULT_PATH ) );
+require_once( getAppPath( CONCESSION_TYPE_DTO_PATH ) );
+require_once( getAppPath( CONCESSION_TYPE_SERVICE_PATH ) );
 
 use com\efe13\mvc\commons\api\enums\UpdateEnum;
 use com\efe13\mvc\commons\api\util\Utils;
+use com\efe13\mvc\commons\api\interfaces\Mappeable;
 use com\efe13\mvc\model\api\impl\dto\DTOAPI;
 use com\efe13\mvc\model\api\impl\helper\QueryHelper;
 use com\efe13\tdt\enums\StatusResultService;
@@ -22,11 +31,11 @@ class ConcessionTypeServiceImpl extends ConcessionTypeService {
 	private static $TYPE_FIELD_MAX_LENGTH = 25;
 	private static $DESCRIPTION_FIELD_MAX_LENGTH = 40;
 	
-	public function getById(ConcessionTypeDTO $concessionTypeDTO) {
+	public function getById(Mappeable $concessionTypeDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
 			
-			$concessionTypeDTO = super\getById( $concessionTypeDTO );
+			$concessionTypeDTO = parent::getById( $concessionTypeDTO );
 			if( $concessionTypeDTO != null ) {
 				$this->resultMessage = null;
 				$this->serviceResult->setObject( $concessionTypeDTO );
@@ -47,7 +56,7 @@ class ConcessionTypeServiceImpl extends ConcessionTypeService {
 		return $this->serviceResult;
 	}
 
-	public function listAll(QueryHelper $queryHelper) {
+	public function listAll(QueryHelper $queryHelper = null) {
 		try {
 			$this->serviceResult = new ServiceResult();
 			$this->resultMessage = null;
@@ -78,7 +87,7 @@ class ConcessionTypeServiceImpl extends ConcessionTypeService {
 		return $this->serviceResult;
 	}
 
-	public function saveConcessionType(ConcessionTypeDTO $concessionTypeDTO) {
+	public function saveConcessionType(Mappeable $concessionTypeDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
 			
@@ -102,7 +111,7 @@ class ConcessionTypeServiceImpl extends ConcessionTypeService {
 		return $this->serviceResult;
 	}
 
-	public function update(ConcessionTypeDTO $concessionTypeDTO) {
+	public function update(Mappeable $concessionTypeDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
 			
@@ -126,7 +135,7 @@ class ConcessionTypeServiceImpl extends ConcessionTypeService {
 		return $this->serviceResult;
 	}
 
-	public function delete(ConcessionTypeDTO $concessionTypeDTO) {
+	public function delete(Mappeable $concessionTypeDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
 			
@@ -150,7 +159,7 @@ class ConcessionTypeServiceImpl extends ConcessionTypeService {
 	}
 
 	//@Override
-	public function validateDTO(DTOAPI $dto, $update) {
+	public function validateDTO(Mappeable $dto, $update) {
 		$concessionTypeDto =  $this->sanitizeDTO( $dto );
 
 		//Validate empty fields
@@ -169,7 +178,7 @@ class ConcessionTypeServiceImpl extends ConcessionTypeService {
 		}
 		
 		$lengthCheck = Utils::lengthCheck( $concessionTypeDto->getDescription(), self::$FIELD_MIN_LENGTH, self::$DESCRIPTION_FIELD_MAX_LENGTH );
-		$exceptionMessage = "El campo descripción es demasiado" + (( lengthCheck < 0 ) ? " corto" : " largo");
+		$exceptionMessage = "El campo descripción es demasiado" + (( $lengthCheck < 0 ) ? " corto" : " largo");
 		if( $lengthCheck != 0 ) {
 			throw new ValidationException( $exceptionMessage );
 		}
@@ -187,7 +196,7 @@ class ConcessionTypeServiceImpl extends ConcessionTypeService {
 	}
 
 	//@Override
-	public function sanitizeDTO(DTOAPI $dto) {
+	public function sanitizeDTO(Mappeable $dto) {
 		$concessionTypeDTO = $dto;
 
 		$concessionTypeDTO->setType( Utils::toUpperCase( $concessionTypeDTO->getType() ) );

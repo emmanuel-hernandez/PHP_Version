@@ -24,7 +24,7 @@ final class Utils {
 		return self::isNull( $str ) || strlen( trim( $str ) ) == 0;
 	}
 	
-	public static function lengthCheck(string $str, int $minLength, int $maxLength) {
+	public static function lengthCheck($str, $minLength, $maxLength) {
 		if( self::isEmpty( $str ) || strlen( $str ) < $minLength ) {
 			return -1;
 		}

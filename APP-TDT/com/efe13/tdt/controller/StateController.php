@@ -5,31 +5,31 @@ require_once( getMVCPath( ACTIVE_ENUM_PATH ) );
 require_once( getMVCPath( QUERY_HELPER_PATH ) );
 require_once( getAppPath( STATUS_RESULT_SERVICE_PATH ) );
 require_once( getAppPath( SERVICE_RESULT_PATH ) );
-require_once( getAppPath( CONCESSION_TYPE_DTO_PATH ) );
-require_once( getAppPath( CONCESSION_TYPE_SERVICE_IMPL_PATH ) );
+require_once( getAppPath( STATE_DTO_PATH ) );
+require_once( getAppPath( STATE_SERVICE_IMPL_PATH ) );
 require_once( getAppPath( APP_UTILS_PATH ) );
 
 use com\efe13\mvc\commons\api\enums\ActiveEnum;
 use com\efe13\mvc\model\api\impl\helper\QueryHelper;
 use com\efe13\tdt\enums\StatusResultService;
 use com\efe13\tdt\helper\ServiceResult;
-use com\efe13\tdt\model\dto\ConcessionTypeDTO;
-use com\efe13\tdt\service\impl\ConcessionTypeServiceImpl;
+use com\efe13\tdt\model\dto\StateDTO;
+use com\efe13\tdt\service\impl\StateServiceImpl;
 use com\efe13\tdt\utils\AppUtils;
 
-//@RequestMapping( "/concessionType" )
-class ConcessionTypeController {
+//@RequestMapping( "/state" )
+class StateController {
 	
-	private static $CONCESSION_TYPE_SERVICE;
+	private static $STATE_SERVICE;
 
 	public function __construct() {
-		 self::$CONCESSION_TYPE_SERVICE = new ConcessionTypeServiceImpl();
+		self::$STATE_SERVICE = new StateServiceImpl();
 	}
 	
 	//@RequestMapping( value="/", method=RequestMethod\GET )
-	public function getConcessionTypes( QueryHelper $queryHelper = null ) {
+	public function getStates(QueryHelper $queryHelper = null) {
 		try {
-			return self::$CONCESSION_TYPE_SERVICE->listAll( $queryHelper );
+			return self::$STATE_SERVICE->listAll( $queryHelper );
 		}
 		catch( \Exception $ex ) {
 			return AppUtils::createResultServiceByMessageAndStatus( $ex->getMessage(), StatusResultService::STATUS_FAILED );
@@ -37,11 +37,11 @@ class ConcessionTypeController {
 	}
 	
 	//@RequestMapping( value="/{id}", method=RequestMethod\GET )
-	public function getConcessionType( $concessionTypeId ) {
+	public function getState($stateId ) {
 		try {
-			$concessionTypeDTO = new ConcessionTypeDTO();
-			$concessionTypeDTO->setId( $concessionTypeId );
-			return self::$CONCESSION_TYPE_SERVICE->getById( $concessionTypeDTO );
+			$stateDTO = new StateDTO();
+			$stateDTO->setId( $stateId );
+			return self::$STATE_SERVICE->getById( $stateDTO );
 		}
 		catch( \Exception $ex ) {
 			return AppUtils::createResultServiceByMessageAndStatus( $ex->getMessage(), StatusResultService::STATUS_FAILED );
@@ -49,10 +49,10 @@ class ConcessionTypeController {
 	}
 	
 	//@RequestMapping( value="/", method=RequestMethod\POST )
-	public function saveConcessionType( ConcessionTypeDTO $concessionTypeDTO ) {
+	public function saveState(StateDTO $stateDTO) {
 		try {
-			$concessionTypeDTO->setActive( ActiveEnum::ACTIVE );
-			return self::$CONCESSION_TYPE_SERVICE->saveConcessionType( $concessionTypeDTO );
+			$stateDTO->setActive( ActiveEnum::ACTIVE );
+			return self::$STATE_SERVICE->saveState( $stateDTO );
 		}
 		catch( \Exception $ex ) {
 			return AppUtils::createResultServiceByMessageAndStatus( $ex->getMessage(), StatusResultService::STATUS_FAILED );
@@ -60,12 +60,12 @@ class ConcessionTypeController {
 	}
 	
 	//@RequestMapping( value="/{id}", method=RequestMethod\PUT )
-	public function updateConcessionType( $concessionTypeId, ConcessionTypeDTO $concessionTypeDTO ) {
+	public function updateState($stateId, StateDTO $stateDTO) {
 		try {
-			$serviceResult = $this->getConcessionType( $concessionTypeId );
+			$serviceResult = $this->getState( $stateId );
 			if( $serviceResult->getStatusResult() == StatusResultService::STATUS_SUCCESS ) {
-				$concessionTypeDTO->setId( $concessionTypeId );
-				return self::$CONCESSION_TYPE_SERVICE->update( $concessionTypeDTO );
+				$stateDTO->setId( $stateId );
+				return self::$STATE_SERVICE->update( $stateDTO );
 			}
 			
 			return $serviceResult;
@@ -76,11 +76,11 @@ class ConcessionTypeController {
 	}
 	
 	//@RequestMapping( value="/{id}", method=RequestMethod\DELETE )
-	public function deleteConcessionType( $concessionTypeId ) {
+	public function deleteState($stateId) {
 		try {
-			$serviceResult = $this->getConcessionType( $concessionTypeId );
+			$serviceResult = $this->getState( $stateId );
 			if( $serviceResult->getStatusResult() == StatusResultService::STATUS_SUCCESS ) {
-				return self::$CONCESSION_TYPE_SERVICE->delete( $serviceResult->getObject() );	
+				return self::$STATE_SERVICE->delete( $serviceResult->getObject() );
 			}
 			
 			return $serviceResult;
