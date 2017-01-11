@@ -7,6 +7,7 @@ require_once( getAppPath( STATUS_RESULT_SERVICE_PATH ) );
 require_once( getAppPath( SERVICE_RESULT_PATH ) );
 require_once( getAppPath( POPULATION_DTO_PATH ) );
 require_once( getAppPath( POPULATION_SERVICE_IMPL_PATH ) );
+require_once( getAppPath( STATE_SERVICE_IMPL_PATH ) );
 require_once( getAppPath( APP_UTILS_PATH ) );
 
 use com\efe13\mvc\commons\api\enums\ActiveEnum;
@@ -15,6 +16,7 @@ use com\efe13\tdt\enums\StatusResultService;
 use com\efe13\tdt\helper\ServiceResult;
 use com\efe13\tdt\model\dto\PopulationDTO;
 use com\efe13\tdt\service\impl\PopulationServiceImpl;
+use com\efe13\tdt\service\impl\StateServiceImpl;
 use com\efe13\tdt\utils\AppUtils;
 
 //@RequestMapping( "/population" )
@@ -27,7 +29,7 @@ class PopulationController {
 	}
 	
 	//@RequestMapping( value="/", method=RequestMethod\GET )
-	public function getPopulations(QueryHelper $queryHelper) {
+	public function getPopulations(QueryHelper $queryHelper = null) {
 		try {
 			return self::$POPULATION_SERVICE->listAll( $queryHelper );
 		}
@@ -63,7 +65,8 @@ class PopulationController {
 	//@RequestMapping( value="/", method=RequestMethod\POST )
 	public function savePopulation(PopulationDTO $populationDTO) {
 		try {
-			$serviceResult = new StateServiceImpl()->getById( $populationDTO->getState() );
+			$serviceResult = new StateServiceImpl();
+			$serviceResult = $serviceResult->getById( $populationDTO->getState() );
 			if( $serviceResult->getStatusResult() == StatusResultService::STATUS_SUCCESS ) {
 				$populationDTO->setActive( ActiveEnum::ACTIVE );
 				return self::$POPULATION_SERVICE->savePopulation( $populationDTO );

@@ -27,6 +27,7 @@ define( 'CRITERIA_PATH', 'com/efe13/mvc/dao/api/impl/util/Criteria.php' );
 define( 'RESTRICTIONS_PATH', 'com/efe13/mvc/dao/api/impl/util/Restrictions.php' );
 define( 'SESSION_FACTORY_PATH', 'com/efe13/mvc/dao/api/impl/util/SessionFactory.php' );
 define( 'PROJECTIONS_PATH', 'com/efe13/mvc/dao/api/impl/util/Projections.php' );
+define( 'JOIN_TYPE_PATH', 'com/efe13/mvc/dao/api/impl/util/JoinType.php' );
 define( 'DAO_API_PATH', 'com/efe13/mvc/dao/api/impl/DAOAPI.php' );
 
 //APP-TDT paths!!!
@@ -66,6 +67,13 @@ define( 'STATE_SERVICE_IMPL_PATH', 'com/efe13/tdt/service/impl/StateServiceImpl.
 define( 'STATE_SERVICE_PATH', 'com/efe13/tdt/service/StateService.php' );
 define( 'STATE_DAO_PATH', 'com/efe13/tdt/dao/StateDAO.php' );
 define( 'STATE_PATH', 'com/efe13/tdt/model/entity/State.php' );
+
+define( 'POPULATION_CONTROLLER_PATH', 'com/efe13/tdt/controller/PopulationController.php' );
+define( 'POPULATION_DTO_PATH', 'com/efe13/tdt/model/dto/PopulationDTO.php' );
+define( 'POPULATION_SERVICE_IMPL_PATH', 'com/efe13/tdt/service/impl/PopulationServiceImpl.php' );
+define( 'POPULATION_SERVICE_PATH', 'com/efe13/tdt/service/PopulationService.php' );
+define( 'POPULATION_DAO_PATH', 'com/efe13/tdt/dao/PopulationDAO.php' );
+define( 'POPULATION_PATH', 'com/efe13/tdt/model/entity/Population.php' );
 
 
 function getMVCPath($constant) {

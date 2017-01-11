@@ -76,7 +76,7 @@ abstract class DAOAPI implements IDAO {
 			$criteria = $this->getCriteria()
 				->add( Restrictions::idEq( $this->criteriaClass, $object->getId() ) )
 				->add( Restrictions::eq( $this->columnNameForActiveElement, $this->activeEnum ) );
-			
+
 			$object = $criteria->uniqueResult();
 			return $object;
 		}
@@ -179,7 +179,7 @@ abstract class DAOAPI implements IDAO {
 		$this->sessionFactory->close();
 	}
 
-	protected function getCriteria($alias = '_this') {
+	protected function getCriteria($alias = 'this_') {
 		$this->sessionFactory->openSession();
 		return $this->getSession()->createCriteria( $this->criteriaClass, $alias );
 	}

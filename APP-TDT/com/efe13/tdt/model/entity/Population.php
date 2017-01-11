@@ -1,7 +1,11 @@
 <?php
 namespace com\efe13\tdt\model\entity;
 
+require_once( getMVCPath( IENTITY_PATH ) );
+require_once( getAppPath( STATE_PATH ) );
+
 use com\efe13\mvc\model\api\impl\entity\EntityAPI;
+use com\efe13\tdt\model\entity\State;
 
 //@Entity
 //@Table( name="population" )
@@ -20,45 +24,49 @@ class Population extends EntityAPI {
 	
 	//@ManyToOne( fetch=FetchType\EAGER )
 	//@JoinColumn( name="stateId" )
-	private State $state;
+	private $state;
 	
 	/*@OneToMany( fetch=FetchType\EAGER, mappedBy="population" )
 	private Set<Channel> channels = new HashSet<>();*/
 	
 	//@Override
-	public Short getId() {
-		return id;
+	public function getId() {
+		return $this->id;
 	}
 	
-	@Override
-	public void setId(Number id) {
-		this\id = (short) id;
+	//@Override
+	public function setId($id) {
+		$this->id = $id;
 	}
 	
-	public String getName() {
-		return name;
+	public function getName() {
+		return $this->name;
 	}
 	
-	public void setName(String name) {
-		this\name = name;
+	public function setName($name) {
+		$this->name = $name;
 	}
 	
-	@Override
-	public Boolean isActive() {
-		return active;
+	//@Override
+	public function isActive() {
+		return $this->active;
 	}
 	
-	@Override
-	public void setActive(Boolean active) {
-		this\active = active;
+	//@Override
+	public function setActive($active) {
+		$this->active = $active;
 	}
 
-	public State getState() {
-		return state;
+	public function getState() {
+		if( $this->state == null ) {
+			$this->state = new State();
+		}
+		
+		return $this->state;
 	}
 
-	public void setState(State state) {
-		this\state = state;
+	public function setState(State $state) {
+		$this->state = $state;
 	}
 /*
 	public Set<Channel> getChannels() {
@@ -66,7 +74,7 @@ class Population extends EntityAPI {
 	}
 
 	public void setChannels(Set<Channel> channels) {
-		this\channels = channels;
+		$this->channels = channels;
 	}*/
 }
 ?>

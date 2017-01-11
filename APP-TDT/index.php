@@ -55,28 +55,33 @@ use com\efe13\mvc\dao\api\impl\DAOAPI;
 */
 
 require_once( 'com/efe13/tdt/utils/AppPaths.php' );
-require_once( getAppPath( STATE_CONTROLLER_PATH ) );
-require_once( getAppPath( STATE_DTO_PATH ) );
+require_once( getAppPath( POPULATION_CONTROLLER_PATH ) );
+require_once( getAppPath( POPULATION_DTO_PATH ) );
 require_once( getAppPath( PRINTER_PATH ) );
 
-use com\efe13\tdt\controller\StateController;
+use com\efe13\tdt\controller\PopulationController;
+use com\efe13\tdt\model\dto\PopulationDTO;
 use com\efe13\tdt\model\dto\StateDTO;
 use com\efe13\tdt\utils\Printer;
 
-$controller = new StateController();
+$controller = new PopulationController();
 
-//$objects = $controller->getStates();
-//$objects = $controller->getState( 20 );
+//$objects = $controller->getPopulations();
+//$objects = $controller->getPopulation( 20 );
 
-$object = new StateDTO();
-$object->setId( 33 );
-$object->setName( 'DSS NYC' );
-$object->setShortName( 'WWW' );
+$object = new PopulationDTO();
+$object->setId( 330 );
+$object->setName( 'POPULATION TEST' );
+
+$state = new StateDTO();
+$state->setId( 23 );
+
+$object->setState( $state );
 $object->setActive( true );
-//$objects = $controller->saveState( $object );
-//$objects = $controller->updateState( 33, $object );
+$objects = $controller->savePopulation( $object );
+//$objects = $controller->updatePopulation( 33, $object );
 
-$objects = $controller->deleteState( 33 );
+//$objects = $controller->deletePopulation( 33 );
 
 $printer = new Printer();
 $printer->output( $objects );

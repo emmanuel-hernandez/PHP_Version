@@ -16,6 +16,7 @@ final class Criteria {
 	private $sql;
 	private $restrictions;
 	private $projection;
+	private $aliases;
 
 	private static $IS_INSERT = true;
 
@@ -25,21 +26,39 @@ final class Criteria {
 		$this->clazz = null;
 		$this->sql = null;
 		$this->restrictions = null;
+		$this->projections = null;
+		$this->aliases = null;
+		$this->tableAlias = null;
 	}
 
-	public function createCriteria($clazz) {
+	public function createCriteria($clazz, $tableAlias = null) {
 		$this->clazz = $clazz;
+		$this->tableAlias = $tableAlias;
 
 		return $this;
 	}
 
 	public function add($restriction) {
+		/*
+		if( !Utils::contains( $restriction, '.' ) ) {
+			$restriction = sprintf( '%s.%s', $this->tableAlias, $restriction );
+		}
+		else {
+			$parts = explode( '.', $restriction );
+		}
+
 		if( !Utils::isNull( $this->restrictions ) ) {
 			$this->restrictions = sprintf( '%s %s', $this->getRestrictions(), 'AND ' );
 		}
 
 		$this->restrictions = sprintf( '%s %s', $this->getRestrictions(), $restriction );
+		*/
+		if( Utils::isEmpty( $this->restrictions ) ) {
+			$this->restrictions = array();
+		}
 
+		//echo 'Adding... ' . $restriction . '<br><br>';
+		$this->restrictions[] = $restriction;
 		return $this;
 	}
 
@@ -49,11 +68,25 @@ final class Criteria {
 		return $this;
 	}
 
+	public function createAlias($entity, $alias, $joinType) {
+		if( Utils::isNull( $this->aliases ) ) {
+			$this->aliases = array();
+		}
+
+		$this->aliases[ $alias ] = sprintf( '%s %s %s ON %s = %s',
+									$joinType,
+									$entity,
+									$alias, 
+									$this->tableAlias .'.'. HibernateUtil::getColumnIdName( $this->clazz ),
+									$alias .'.'. HibernateUtil::getRelationshipColumnId( $this->clazz, $entity ) );
+		return $this;
+	}
+
 	public function listAll() {
 		$objects = null;
 		$this->sql = sprintf( 'SELECT %s FROM %s', 
 							  $this->getProjection(),
-							  strtolower( HibernateUtil::getClassName( $this->clazz ) ) );
+							  $this->getAliases() );
 
 		$result = $this->execute();
 		while( $row = $result->fetch_array( MYSQLI_ASSOC ) ) {
@@ -64,14 +97,6 @@ final class Criteria {
 	}
 
 	public function uniqueResult() {
-		$this->sql = sprintf( 'SELECT %s FROM %s',
-							  $this->getProjection(),
-							  strtolower( HibernateUtil::getClassName( $this->clazz ) ) );
-
-		if( !Utils::isNull( $this->restrictions != null ) ) {
-			$this->sql = sprintf( '%s %s', $this->sql, $this->getRestrictions() );
-		}
-
 		$result = $this->execute();
 		if( $result->num_rows == 0 ) {
 			return null;
@@ -138,18 +163,72 @@ final class Criteria {
 			$projection = implode( HibernateUtil::getPropertiesClass( $this->clazz ), ', ' );
 		}
 
+		$fields = explode( ', ', $projection );
+		if( !Utils::isEmpty( $fields ) ) {
+			$projections = array();
+			foreach( $fields as $field ) {
+				if( !Utils::contains( $field, '.' ) ) {
+					$projections[] = sprintf( '%s.%s', $this->tableAlias, $field );
+				}
+			}
+
+			$projection = implode( ', ', $projections );
+		}
+
 		return $projection;
 	}
 
-	private function getRestrictions() {
-		if( Utils::isNull( $this->restrictions ) ) {
-			$this->restrictions = 'WHERE ';
+	private function getAliases() {
+		$aliases = sprintf( '%s %s', strtolower( HibernateUtil::getClassName( $this->clazz ) ), $this->tableAlias );
+		if( !Utils::isEmpty( $this->aliases ) ) {
+			foreach( $this->aliases as $alias ) {
+				$aliases .= sprintf( ' %s', $alias );
+			}
 		}
 
-		return $this->restrictions;
+		//$aliases = $aliases . $this->aliases;
+		return $aliases;
+	}
+
+	private function getRestrictions() {
+		if( Utils::isEmpty( $this->restrictions ) ) {
+			return '';
+		}
+
+		if( !Utils::isEmpty( $this->aliases ) ) {
+			foreach( $this->restrictions as $restriction ) {
+				//echo '$alias: ' . $alias . '<br><br>';
+				//echo '$value: ' . $value . '<br><br>';
+				echo '$restriction: ' . $restriction . '<br><br>';
+				$fieldValue = explode( ' = ', $restriction );
+				if( Utils::contains( $fieldValue[ 0 ], '.' ) ) {
+					$aliasProperty = explode( '.', $fieldValue[0] );
+
+					if( array_key_exists( $aliasProperty[0], $this->aliases ) ) {
+						echo '$aliasProperty: ' . $fieldValue[0]. '<br><br>';
+						echo '$this->aliases[ $fieldValue[0] ] = ' . $this->aliases[ $aliasProperty[0] ]. '<br><br>';
+						$fieldValue[0] = HibernateUtil::getColumnIdName( $this->aliases[ $aliasProperty[0] ] );
+					}
+				}
+			}
+		}
+
+		$restrictions = 'WHERE ' . implode( ' AND ', $this->restrictions );
+		return $restrictions;
+	}
+
+	private function getSQL() {
+		$sql = sprintf( 'SELECT %s
+						 FROM %s
+						 %s',
+						$this->getProjection(),
+					  	$this->getAliases(),
+					  	$this->getRestrictions() );
+		return $sql;
 	}
 
 	private function execute( $is_insert = false ) {
+		$this->sql = $this->getSQL();
 		echo( $this->sql . '<br><br>');
 		$result = $this->sessionFactory->query( $this->sql );
 

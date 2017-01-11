@@ -10,8 +10,8 @@ require_once( getMVCPath( ENTITY_API_PATH ) );
 require_once( getMVCPath( QUERY_HELPER_PATH ) );
 require_once( getMVCPath( SERVICE_API_PATH ) );
 require_once( getMVCPath( UTILS_PATH ) );
+require_once( getMVCPath( MAPPEABLE_PATH ) );
 require_once( getAppPath( POPULATION_DAO_PATH ) );
-require_once( getAppPath( MAPPEABLE_PATH ) );
 require_once( getAppPath( POPULATION_PATH ) );
 
 use com\efe13\mvc\commons\api\enums\ActiveEnum;
@@ -65,7 +65,7 @@ class PopulationService extends ServiceAPI {
 	}
 
 	//@Override
-	public function getAll(QueryHelper $queryHelper) {
+	public function getAll(QueryHelper $queryHelper = null) {
 		$dtos = array();
 		
 		try {
@@ -84,7 +84,7 @@ class PopulationService extends ServiceAPI {
 		return $dtos;
 	}
 	
-	public function getByState(DTOAPI $stateDTO) {
+	public function getByState(Mappeable $stateDTO) {
 		$dtos = array();
 		
 		try {
@@ -104,7 +104,7 @@ class PopulationService extends ServiceAPI {
 		return $dtos;
 	}
 
-	public function findByNameAndState(DTOAPI $populationDTO) {
+	public function findByNameAndState(Mappeable $populationDTO) {
 		$entity = new Population();
 		$id = 0;
 		
@@ -158,7 +158,7 @@ class PopulationService extends ServiceAPI {
 	}
 
 	//@Override
-	public function sanitizeDTO(Mappeable dto) {
+	public function sanitizeDTO(Mappeable $dto) {
 		throw new ValidationException( "This method has not implementation\ It needs to be implemented by the concrete class" );	
 	}
 }

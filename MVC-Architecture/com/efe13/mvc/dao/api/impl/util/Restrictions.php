@@ -11,6 +11,7 @@ final class Restrictions {
 
 	public static function eq($column, $value) {
 		$value = Utils::isNull( $value ) ? 'null' : $value;
+		
 		$value = is_string( $value ) ? sprintf( "'%s'", $value ) : $value;
 		return sprintf( '%s = %s', $column, $value );
 	}

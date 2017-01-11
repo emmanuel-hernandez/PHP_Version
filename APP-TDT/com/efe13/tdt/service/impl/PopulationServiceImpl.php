@@ -1,5 +1,5 @@
 <?php
-namespace com\efe13ºtdt\service\impl;
+namespace com\efe13\tdt\service\impl;
 
 require_once( getMVCPath( UPDATE_ENUM_PATH ) );
 require_once( getMVCPath( UTILS_PATH ) );
@@ -35,7 +35,7 @@ class PopulationServiceImpl extends PopulationService {
 			$this->serviceResult = new ServiceResult();
 			
 			$populationDTO = parent::getById( $populationDTO );
-			if( Utils::isNull( $populationDTO ) ) {
+			if( !Utils::isNull( $populationDTO ) ) {
 				$this->resultMessage = null;
 				$this->serviceResult->setObject( $populationDTO );
 				$this->statusResultService = StatusResultService::STATUS_SUCCESS;
@@ -55,7 +55,7 @@ class PopulationServiceImpl extends PopulationService {
 		return $this->serviceResult;
 	}
 
-	public function listAll(QueryHelper $queryHelper) {
+	public function listAll(QueryHelper $queryHelper = null) {
 		try {
 			$this->serviceResult = new ServiceResult();
 
@@ -86,12 +86,12 @@ class PopulationServiceImpl extends PopulationService {
 		return $this->serviceResult;
 	}
 	
-	public function getByState(StateDTO stateDTO) {
+	public function getByState(StateDTO $stateDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
 
 			$dtos = array();
-			foreach( parent::getByState( stateDTO ) as $dto ) {
+			foreach( parent::getByState( $stateDTO ) as $dto ) {
 				$dtos[] = $dto;
 			}
 			
@@ -137,7 +137,7 @@ class PopulationServiceImpl extends PopulationService {
 		return $this->serviceResult;
 	}
 
-	public function update(PopulationDTO $populationDTO) {
+	public function update(Mappeable $populationDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
 			
@@ -161,7 +161,7 @@ class PopulationServiceImpl extends PopulationService {
 		return $this->serviceResult;
 	}
 
-	public function delete(PopulationDTO $populationDTO) {
+	public function delete(Mappeable $populationDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
 			
@@ -186,7 +186,7 @@ class PopulationServiceImpl extends PopulationService {
 	
 	//@Override
 	public function validateDTO(Mappeable $dto, $update ) {
-		$populationDto = (PopulationDTO) sanitizeDTO( $dto );
+		$populationDto = $this->sanitizeDTO( $dto );
 		
 		//Validate empty fields
 		if( Utils::isEmpty( $populationDto->getName() ) ) {

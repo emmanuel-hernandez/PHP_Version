@@ -49,5 +49,15 @@ final class Utils {
 		
 		return strtoupper( $str );
 	}
+
+	public static function contains($str, $char) {
+		$contains = stripos( $str, $char );
+
+		return ($contains !== false);
+	}
+
+	public static function size(array $array) {
+		return count( $array );
+	}
 }
 ?>

@@ -55,7 +55,12 @@ abstract class ServiceAPI extends Utilities implements IService {
 				$getMethod = 'get' . substr( $method, 3, strlen( $method ) );
 
 				if( method_exists( get_class( $destination ), $getMethod ) ) {
-					$destination->$method( $source->$getMethod() );
+					$data = $source->$getMethod();
+					if( is_object( $data ) ) {
+						$data = $this->map( $data, $destination->$getMethod() );
+					}
+
+					$destination->$method( $data );
 				}
 				else {
 					$getMethod = 'is' . substr( $method, 3, strlen( $method ) );
@@ -71,6 +76,11 @@ abstract class ServiceAPI extends Utilities implements IService {
 		}
 
 		return $destination;
+	}
+
+	private function isDTOClass($clazz) {
+		$postfix = substr( $clazz, strlen( $clazz )-3, 3 );
+		return strcasecmp( $postfix, 'DTO' ) == 0;
 	}
 }
 ?>

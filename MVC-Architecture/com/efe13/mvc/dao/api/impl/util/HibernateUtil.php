@@ -42,22 +42,28 @@ class HibernateUtil {
 	}
 
 	public static function getPropertiesClass($clazz) {
-		$publicMethods = self::getClassMethods( $clazz );
+		$methods = self::getClassMethods( $clazz );
 		$properties = array();
 
-		if( empty( $publicMethods ) ) {
+		if( empty( $methods ) ) {
 			return array();
 		}
 
-		foreach( $publicMethods as $method ) {
+		foreach( $methods as $method ) {
 			$prefix = substr( $method, 0, 3 );
 
 			if( strcasecmp( $prefix, 'set' ) == 0  ) {
 				$property = strtolower( substr( $method, 3, strlen( $method ) ) );
 
 				if( strcasecmp( $property, 'id' ) == 0 ) {
-					$prop = self::getClassName( $clazz ) . ucfirst( $property );
-					$property = is_object( $prop ) ? self::getColumnIdName( $prop ) : $prop;
+					$property = self::getClassName( $clazz ) . ucfirst( $property );
+				}
+				else {
+					$get = 'get' . $property;
+					if( method_exists( $clazz, $get ) ) {
+						$data = $clazz->$get();
+						$property = is_object( $data ) ? self::getColumnIdName( $data ) : $property;
+					}
 				}
 
 				$properties[] = $property;
@@ -74,6 +80,7 @@ class HibernateUtil {
 		$newProperties = array();
 		foreach( $properties as $property ) {
 			if( strcasecmp( $property, $columnIdName ) != 0 ) {
+				$property = is_object( $property ) ? self::getColumnIdName( $property ) : $property;
 				$newProperties[] = $property;
 			}
 		}
@@ -140,6 +147,17 @@ class HibernateUtil {
 				}
 			}
 		}
+	}
+
+	public static function getRelationshipColumnId($clazz, $entity) {
+		$method = 'get' . $entity;
+
+		if( !method_exists( $clazz, $method ) ) {
+			return false;
+		}
+
+		$relationship = $clazz->$method();
+		return self::getColumnIdName( $relationship );
 	}
 
 	private static function getClassMethods($clazz) {
