@@ -127,7 +127,7 @@ abstract class DAOAPI implements IDAO {
 		//echo 'Guardando...<br>';
 		$session = $this->getCriteria();
 		$generatedId = 0;
-		
+
 		try {
 			$generatedId = $session->save( $object );
 		}

@@ -80,6 +80,7 @@ class HibernateUtil {
 		$newProperties = array();
 		foreach( $properties as $property ) {
 			if( strcasecmp( $property, $columnIdName ) != 0 ) {
+				echo 'Adding ' . $property . '<br>';
 				$property = is_object( $property ) ? self::getColumnIdName( $property ) : $property;
 				$newProperties[] = $property;
 			}

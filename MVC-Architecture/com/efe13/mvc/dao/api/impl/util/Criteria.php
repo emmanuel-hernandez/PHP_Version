@@ -4,10 +4,12 @@ namespace com\efe13\mvc\dao\api\impl\util;
 require_once( dirname( dirname( dirname( dirname(__DIR__) ) ) ) . '/commons/api/util/Utils.php' );
 require_once( dirname( dirname( dirname( dirname(__DIR__) ) ) ) . '/commons/api/exception/HibernateException.php' );
 require_once( 'HibernateUtil.php' );
+require_once( 'Alias.php' );
 
 use com\efe13\mvc\commons\api\util\Utils;
 use com\efe13\mvc\commons\api\exception\HibernateException;
 use com\efe13\mvc\dao\api\impl\util\HibernateUtil;
+use com\efe13\mvc\dao\api\impl\util\Alias;
 
 final class Criteria {
 	
@@ -73,12 +75,14 @@ final class Criteria {
 			$this->aliases = array();
 		}
 
-		$this->aliases[ $alias ] = sprintf( '%s %s %s ON %s = %s',
+		$this->aliases[ $alias ] = /*sprintf( '%s %s %s ON %s = %s',
 									$joinType,
 									$entity,
 									$alias, 
 									$this->tableAlias .'.'. HibernateUtil::getColumnIdName( $this->clazz ),
 									$alias .'.'. HibernateUtil::getRelationshipColumnId( $this->clazz, $entity ) );
+									*/
+									new Alias( $entity, $alias, $joinType );
 		return $this;
 	}
 
@@ -129,6 +133,7 @@ final class Criteria {
 							  implode( HibernateUtil::getPropertiesClassWithOutIdProperty( $this->clazz ), ', ' ),
 							  implode( $propertiesValues, ', ' ) );
 
+		die( $this->sql );
 		return ( $this->execute( self::$IS_INSERT ) );
 	}
 
@@ -182,7 +187,11 @@ final class Criteria {
 		$aliases = sprintf( '%s %s', strtolower( HibernateUtil::getClassName( $this->clazz ) ), $this->tableAlias );
 		if( !Utils::isEmpty( $this->aliases ) ) {
 			foreach( $this->aliases as $alias ) {
-				$aliases .= sprintf( ' %s', $alias );
+				$aliases .= sprintf( ' %s %s %s ON %s = %s', $alias->getJoinType(),
+														 $alias->getEntity(),
+														 $alias->getAlias(),
+														 $this->tableAlias . '.' . HibernateUtil::getColumnIdName( $this->clazz ),
+														 $alias->getAlias() .'.' . HibernateUtil::getRelationshipColumnId( $this->clazz, $alias->getEntity() ) );
 			}
 		}
 
@@ -196,24 +205,31 @@ final class Criteria {
 		}
 
 		if( !Utils::isEmpty( $this->aliases ) ) {
-			foreach( $this->restrictions as $restriction ) {
-				//echo '$alias: ' . $alias . '<br><br>';
-				//echo '$value: ' . $value . '<br><br>';
-				echo '$restriction: ' . $restriction . '<br><br>';
-				$fieldValue = explode( ' = ', $restriction );
-				if( Utils::contains( $fieldValue[ 0 ], '.' ) ) {
-					$aliasProperty = explode( '.', $fieldValue[0] );
+			for( $i=0; $i<Utils::size( $this->restrictions ); $i++ ) {
 
+				$restriction = $this->restrictions[ $i ];
+				if( Utils::contains( $restriction->getField(), '.' ) ) {
+
+					$aliasProperty = explode( '.', $restriction->getField() );
 					if( array_key_exists( $aliasProperty[0], $this->aliases ) ) {
-						echo '$aliasProperty: ' . $fieldValue[0]. '<br><br>';
-						echo '$this->aliases[ $fieldValue[0] ] = ' . $this->aliases[ $aliasProperty[0] ]. '<br><br>';
-						$fieldValue[0] = HibernateUtil::getColumnIdName( $this->aliases[ $aliasProperty[0] ] );
+
+						$aliasProperty[1] = HibernateUtil::getRelationshipColumnId( $this->clazz, $this->aliases[ $aliasProperty[0] ]->getEntity() );
+						if( !Utils::isNull( $aliasProperty[1] ) ) {
+							$this->restrictions[ $i ]->setField( implode( '.', $aliasProperty ) );
+						}
 					}
 				}
 			}
 		}
 
-		$restrictions = 'WHERE ' . implode( ' AND ', $this->restrictions );
+		$restrictions = array();
+		foreach( $this->restrictions as $restriction ) {
+			$restrictions[] = sprintf( '%s %s %s', $restriction->getField(),
+			 									 $restriction->getEqOperator(),
+			 									 $restriction->getValue() );
+		}
+		
+		$restrictions = 'WHERE ' . implode( ' AND ', $restrictions );	
 		return $restrictions;
 	}
 

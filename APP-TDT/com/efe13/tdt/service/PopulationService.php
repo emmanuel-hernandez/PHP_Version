@@ -123,6 +123,7 @@ class PopulationService extends ServiceAPI {
 	public function save(Mappeable $populationDTO) {
 		try {
 			$population = $this->map( $populationDTO, new Population() );
+
 			return self::$POPULATION_DAO->save( $population );
 		}
 		catch( \Exception $ex ) {
