@@ -40,8 +40,7 @@ class PopulationDAO extends DAOAPI {
 				->add( Restrictions::eq( "s.id", $population->getState()->getId() ) )
 				->add( Restrictions::eq( "p.active", ActiveEnum::ACTIVE ) );
 
-			$object = $criteria->uniqueResult();
-
+			$object = $criteria->uniqueResult();;
 			if( !Utils::isNull( $object  ) ) {
 				return $object;
 			}

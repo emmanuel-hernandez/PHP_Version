@@ -12,7 +12,7 @@ class HibernateUtil {
 
 	private function __construct() {
 		try {
-			self::$sessionFactory = new SessionFactory( 'root', 'admin', 'localhost', 'tdt' );
+			self::$sessionFactory = new SessionFactory( 'root', 'root', 'localhost', 'tdt' );
 		}
 		catch( DAOException $ex ) {
 			throw new DAOException( $ex->getMessage() );
@@ -33,16 +33,16 @@ class HibernateUtil {
 		return HibernateUtil::$sessionFactory;
 	}
 
-	public static function getClassName($clazz) {
-		$fullClassName = get_class( $clazz );
+	public static function getClassName($entity) {
+		$fullClassName = get_class( $entity );
 		$lastBackSlashPos = strripos( $fullClassName, '\\' ) + 1;
 		$className = substr( $fullClassName, $lastBackSlashPos, strlen( $fullClassName ) );
 
 		return $className;
 	}
 
-	public static function getPropertiesClass($clazz) {
-		$methods = self::getClassMethods( $clazz );
+	public static function getPropertiesClass($entity) {
+		$methods = self::getClassMethods( $entity );
 		$properties = array();
 
 		if( empty( $methods ) ) {
@@ -56,12 +56,12 @@ class HibernateUtil {
 				$property = strtolower( substr( $method, 3, strlen( $method ) ) );
 
 				if( strcasecmp( $property, 'id' ) == 0 ) {
-					$property = self::getClassName( $clazz ) . ucfirst( $property );
+					$property = self::getClassName( $entity ) . ucfirst( $property );
 				}
 				else {
 					$get = 'get' . $property;
-					if( method_exists( $clazz, $get ) ) {
-						$data = $clazz->$get();
+					if( method_exists( $entity, $get ) ) {
+						$data = $entity->$get();
 						$property = is_object( $data ) ? self::getColumnIdName( $data ) : $property;
 					}
 				}
@@ -73,14 +73,13 @@ class HibernateUtil {
 		return $properties;
 	}
 
-	public static function getPropertiesClassWithOutIdProperty($clazz) {
-		$properties = self::getPropertiesClass( $clazz );
-		$columnIdName = self::getColumnIdName( $clazz );
+	public static function getPropertiesClassWithOutIdProperty($entity) {
+		$properties = self::getPropertiesClass( $entity );
+		$columnIdName = self::getColumnIdName( $entity );
 
 		$newProperties = array();
 		foreach( $properties as $property ) {
 			if( strcasecmp( $property, $columnIdName ) != 0 ) {
-				echo 'Adding ' . $property . '<br>';
 				$property = is_object( $property ) ? self::getColumnIdName( $property ) : $property;
 				$newProperties[] = $property;
 			}
@@ -89,25 +88,37 @@ class HibernateUtil {
 		return $newProperties;
 	}
 
-	public static function getPropertiesClassValuesWithOutIdProperty($clazz, $object) {
-		$properties = self::getPropertiesClass( $clazz );
-		$columnIdName = self::getColumnIdName( $clazz );
+	public static function getPropertiesClassValuesWithOutIdProperty($entity, $object) {
+		$properties = self::getPropertiesClass( $entity );
+		$columnIdName = self::getColumnIdName( $entity );
 
 		$values = array();
+		$hasInnerValue = false;
 		foreach( $properties as $property ) {
+			$hasInnerValue = false;
+
 			if( strcasecmp( $property, $columnIdName ) != 0 ) {
 				$getMethod = 'get' . $property;
 
-				if( !method_exists( $clazz, $getMethod ) ) {
-					$getMethod = 'is' . $property;
-					if( !method_exists( $clazz, $getMethod ) ) {
-						continue;
+				if( !method_exists( $object, $getMethod ) ) {
+					$getMethod = substr( $getMethod, 0, strlen($getMethod) - 2 );
+					if( method_exists( $object, $getMethod ) ) {
+						$value = self::getIdPropertieValue( $object->$getMethod() );
+						$hasInnerValue = true;
+					}
+					else {
+						$getMethod = 'is' . $property;
+						if( !method_exists( $object, $getMethod ) ) {
+							continue;
+						}
 					}
 				}
 
-				$value = $object->$getMethod();
-				if( is_bool( $value ) ) {
-					$value = $value ? 1 : 0;	
+				if( !$hasInnerValue ) {
+					$value = $object->$getMethod();
+					if( is_bool( $value ) ) {
+						$value = $value ? 1 : 0;	
+					}
 				}
 
 				$values[] =  $value;
@@ -117,12 +128,22 @@ class HibernateUtil {
 		return $values;
 	}
 
-	public static function buildObject($clazz, array $data) {
-		$classInstance = new $clazz;
+	public static function getIdPropertieValue($entity) {
+		$getMethod = 'getId';
+		if( method_exists( $entity, $getMethod ) ) {
+			return $entity->$getMethod();
+		}
+		
+		return null;
+	}
+
+	public static function buildObject($entity, array $data) {
+		$classInstance = new $entity;
 
 		foreach ( $data as $method => $value ) {
-			$id = substr( $method, strlen( $method ) - 2, 2 );
-			$method = 'set' . (( strcasecmp( $id, 'id' ) == 0 ) ? $id : $method);
+			$aliasProperty = explode( '.', $method );
+			$id = substr( $aliasProperty[1], strlen( $aliasProperty[1] ) - 2, 2 );
+			$method = 'set' . (( strcasecmp( $id, 'id' ) == 0 ) ? $id : $aliasProperty[1]);
 
 			$classInstance->$method( $value );
 		}
@@ -130,8 +151,8 @@ class HibernateUtil {
 		return $classInstance;
 	}
 
-	public static function getColumnIdName($clazz) {
-		$methods = self::getClassMethods( $clazz );
+	public static function getColumnIdName($entity) {
+		$methods = self::getClassMethods( $entity );
 
 		if( empty( $methods ) ) {
 			return null;
@@ -144,25 +165,25 @@ class HibernateUtil {
 				$property = strtolower( substr( $method, 3, strlen( $method ) ) );
 
 				if( strcasecmp( $property, 'id' ) == 0 ) {
-					return self::getClassName( $clazz ) . ucfirst( $property );
+					return self::getClassName( $entity ) . ucfirst( $property );
 				}
 			}
 		}
 	}
 
-	public static function getRelationshipColumnId($clazz, $entity) {
-		$method = 'get' . $entity;
+	public static function getRelationshipColumnId($entity, $entityRelationShip) {
+		$method = 'get' . $entityRelationShip;
 
-		if( !method_exists( $clazz, $method ) ) {
+		if( !method_exists( $entity, $method ) ) {
 			return false;
 		}
 
-		$relationship = $clazz->$method();
+		$relationship = $entity->$method();
 		return self::getColumnIdName( $relationship );
 	}
 
-	private static function getClassMethods($clazz) {
-		return get_class_methods( $clazz );
+	private static function getClassMethods($entity) {
+		return get_class_methods( $entity );
 	}
 }
 ?>

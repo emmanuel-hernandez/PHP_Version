@@ -70,16 +70,16 @@ $controller = new PopulationController();
 //$objects = $controller->getPopulation( 20 );
 
 $object = new PopulationDTO();
-$object->setId( 330 );
-$object->setName( 'POPULATION TEST' );
+$object->setId( 324 );
+$object->setName( 'POPULATION 2222 TEST' );
 
 $state = new StateDTO();
-$state->setId( 23 );
+$state->setId( 24 );
 
 $object->setState( $state );
 $object->setActive( true );
-$objects = $controller->savePopulation( $object );
-//$objects = $controller->updatePopulation( 33, $object );
+//$objects = $controller->savePopulation( $object );
+$objects = $controller->updatePopulation( 324, $object );
 
 //$objects = $controller->deletePopulation( 33 );
 

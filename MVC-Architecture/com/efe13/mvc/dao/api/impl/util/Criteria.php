@@ -14,52 +14,39 @@ use com\efe13\mvc\dao\api\impl\util\Alias;
 final class Criteria {
 	
 	private $sessionFactory;
-	private $clazz;
+	private $entity;
 	private $sql;
 	private $restrictions;
 	private $projection;
 	private $aliases;
 
 	private static $IS_INSERT = true;
+	private static $IS_NOT_INSERT = false;
+	private static $IS_UPDATE = true;
 
 	public function __construct($sessionFactory) {
 		$this->sessionFactory = $sessionFactory;
 
-		$this->clazz = null;
+		$this->entity = null;
 		$this->sql = null;
 		$this->restrictions = null;
 		$this->projections = null;
 		$this->aliases = null;
-		$this->tableAlias = null;
+		$this->entityAlias = null;
 	}
 
-	public function createCriteria($clazz, $tableAlias = null) {
-		$this->clazz = $clazz;
-		$this->tableAlias = $tableAlias;
+	public function createCriteria($entity, $tableAlias = null) {
+		$this->entity = $entity;
+		$this->entityAlias = $tableAlias;
 
 		return $this;
 	}
 
 	public function add($restriction) {
-		/*
-		if( !Utils::contains( $restriction, '.' ) ) {
-			$restriction = sprintf( '%s.%s', $this->tableAlias, $restriction );
-		}
-		else {
-			$parts = explode( '.', $restriction );
-		}
-
-		if( !Utils::isNull( $this->restrictions ) ) {
-			$this->restrictions = sprintf( '%s %s', $this->getRestrictions(), 'AND ' );
-		}
-
-		$this->restrictions = sprintf( '%s %s', $this->getRestrictions(), $restriction );
-		*/
 		if( Utils::isEmpty( $this->restrictions ) ) {
 			$this->restrictions = array();
 		}
 
-		//echo 'Adding... ' . $restriction . '<br><br>';
 		$this->restrictions[] = $restriction;
 		return $this;
 	}
@@ -75,14 +62,7 @@ final class Criteria {
 			$this->aliases = array();
 		}
 
-		$this->aliases[ $alias ] = /*sprintf( '%s %s %s ON %s = %s',
-									$joinType,
-									$entity,
-									$alias, 
-									$this->tableAlias .'.'. HibernateUtil::getColumnIdName( $this->clazz ),
-									$alias .'.'. HibernateUtil::getRelationshipColumnId( $this->clazz, $entity ) );
-									*/
-									new Alias( $entity, $alias, $joinType );
+		$this->aliases[ $alias ] = new Alias( $entity, $alias, $joinType );
 		return $this;
 	}
 
@@ -94,7 +74,7 @@ final class Criteria {
 
 		$result = $this->execute();
 		while( $row = $result->fetch_array( MYSQLI_ASSOC ) ) {
-			$objects[] = HibernateUtil::buildObject( $this->clazz, $row );
+			$objects[] = HibernateUtil::buildObject( $this->entity, $row );
 		}
 
 		return $objects;
@@ -102,6 +82,7 @@ final class Criteria {
 
 	public function uniqueResult() {
 		$result = $this->execute();
+
 		if( $result->num_rows == 0 ) {
 			return null;
 		}
@@ -112,16 +93,19 @@ final class Criteria {
 		$projections = array();
 		$projections = explode( ',', $this->getProjection() );
 		if( count( $projections ) > 1 ) {
-			return HibernateUtil::buildObject( $this->clazz, $result->fetch_array( MYSQLI_ASSOC ) );
+			return HibernateUtil::buildObject( $this->entity, $result->fetch_array( MYSQLI_ASSOC ) );
 		}
 		else {
 			$reg = $result->fetch_array( MYSQLI_ASSOC );
-			return $reg[ $this->getProjection() ];
+			foreach( $reg as $key => $value ) {
+				return $value;
+			}
 		}
 	}
 
 	public function save($object) {
-		$propertiesValues = HibernateUtil::getPropertiesClassValuesWithOutIdProperty( $this->clazz, $object );
+		$propertiesValues = HibernateUtil::getPropertiesClassValuesWithOutIdProperty( $this->entity, $object );
+
 		for( $i=0; $i<count( $propertiesValues ); $i++ ) {
 			if( is_string( $propertiesValues[ $i ] ) ) {
 				$propertiesValues[ $i ] = sprintf( "'%s'", $propertiesValues[ $i ] );
@@ -129,17 +113,16 @@ final class Criteria {
 		}
 
 		$this->sql = sprintf( 'INSERT INTO %s(%s) VALUES(%s)',
-							  strtolower( HibernateUtil::getClassName( $this->clazz ) ),
-							  implode( HibernateUtil::getPropertiesClassWithOutIdProperty( $this->clazz ), ', ' ),
+							  strtolower( HibernateUtil::getClassName( $this->entity ) ),
+							  implode( HibernateUtil::getPropertiesClassWithOutIdProperty( $this->entity ), ', ' ),
 							  implode( $propertiesValues, ', ' ) );
 
-		die( $this->sql );
 		return ( $this->execute( self::$IS_INSERT ) );
 	}
 
 	public function update($object) {
-		$propertiesValues = HibernateUtil::getPropertiesClassValuesWithOutIdProperty( $this->clazz, $object );
-		$properties = HibernateUtil::getPropertiesClassWithOutIdProperty( $this->clazz );
+		$propertiesValues = HibernateUtil::getPropertiesClassValuesWithOutIdProperty( $this->entity, $object );
+		$properties = HibernateUtil::getPropertiesClassWithOutIdProperty( $this->entity );
 
 		for( $i=0; $i<count( $properties ); $i++ ) {
 			$propertiesValues[ $i ] = is_string( $propertiesValues[ $i ] ) ?
@@ -147,15 +130,15 @@ final class Criteria {
 									  sprintf( "%s = %s", $properties[ $i ], $propertiesValues[ $i ] );
 		}
 
-		$columnIdName = HibernateUtil::getColumnIdName( $this->clazz );
+		$columnIdName = HibernateUtil::getColumnIdName( $this->entity );
 		$getColumnIdName = 'getId';
 		$this->sql = sprintf( 'UPDATE %s SET %s WHERE %s = %d',
-							  strtolower( HibernateUtil::getClassName( $this->clazz ) ),
+							  strtolower( HibernateUtil::getClassName( $this->entity ) ),
 							  implode( $propertiesValues, ', ' ),
 							  $columnIdName,
 							  $object->$getColumnIdName() );
 
-		return ( $this->execute() );
+		return ( $this->execute( self::$IS_NOT_INSERT, self::$IS_UPDATE ) );
 	}
 
 	private function getProjection() {
@@ -165,7 +148,7 @@ final class Criteria {
 			$projection = $this->projection;
 		}
 		else {
-			$projection = implode( HibernateUtil::getPropertiesClass( $this->clazz ), ', ' );
+			$projection = implode( HibernateUtil::getPropertiesClass( $this->entity ), ', ' );
 		}
 
 		$fields = explode( ', ', $projection );
@@ -173,7 +156,8 @@ final class Criteria {
 			$projections = array();
 			foreach( $fields as $field ) {
 				if( !Utils::contains( $field, '.' ) ) {
-					$projections[] = sprintf( '%s.%s', $this->tableAlias, $field );
+					$definition = $this->entityAlias . '.' . $field;
+					$projections[] = sprintf( '%s AS "%s"', $definition, $definition );
 				}
 			}
 
@@ -184,18 +168,17 @@ final class Criteria {
 	}
 
 	private function getAliases() {
-		$aliases = sprintf( '%s %s', strtolower( HibernateUtil::getClassName( $this->clazz ) ), $this->tableAlias );
+		$aliases = sprintf( '%s %s', strtolower( HibernateUtil::getClassName( $this->entity ) ), $this->entityAlias );
 		if( !Utils::isEmpty( $this->aliases ) ) {
 			foreach( $this->aliases as $alias ) {
 				$aliases .= sprintf( ' %s %s %s ON %s = %s', $alias->getJoinType(),
 														 $alias->getEntity(),
 														 $alias->getAlias(),
-														 $this->tableAlias . '.' . HibernateUtil::getColumnIdName( $this->clazz ),
-														 $alias->getAlias() .'.' . HibernateUtil::getRelationshipColumnId( $this->clazz, $alias->getEntity() ) );
+														 $this->entityAlias . '.' . HibernateUtil::getRelationshipColumnId( $this->entity, $alias->getEntity() ),
+														 $alias->getAlias() .'.' . HibernateUtil::getRelationshipColumnId( $this->entity, $alias->getEntity() ) );
 			}
 		}
 
-		//$aliases = $aliases . $this->aliases;
 		return $aliases;
 	}
 
@@ -213,7 +196,7 @@ final class Criteria {
 					$aliasProperty = explode( '.', $restriction->getField() );
 					if( array_key_exists( $aliasProperty[0], $this->aliases ) ) {
 
-						$aliasProperty[1] = HibernateUtil::getRelationshipColumnId( $this->clazz, $this->aliases[ $aliasProperty[0] ]->getEntity() );
+						$aliasProperty[1] = HibernateUtil::getRelationshipColumnId( $this->entity, $this->aliases[ $aliasProperty[0] ]->getEntity() );
 						if( !Utils::isNull( $aliasProperty[1] ) ) {
 							$this->restrictions[ $i ]->setField( implode( '.', $aliasProperty ) );
 						}
@@ -240,11 +223,12 @@ final class Criteria {
 						$this->getProjection(),
 					  	$this->getAliases(),
 					  	$this->getRestrictions() );
+
 		return $sql;
 	}
 
-	private function execute( $is_insert = false ) {
-		$this->sql = $this->getSQL();
+	private function execute( $is_insert = false, $is_update = false ) {
+		$this->sql = $is_insert || $is_update ? $this->sql : $this->getSQL();
 		echo( $this->sql . '<br><br>');
 		$result = $this->sessionFactory->query( $this->sql );
 

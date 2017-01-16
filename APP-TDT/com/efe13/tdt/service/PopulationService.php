@@ -110,6 +110,7 @@ class PopulationService extends ServiceAPI {
 		
 		try {
 			$entity = $this->map( $populationDTO, $entity );
+
 			$id = self::$POPULATION_DAO->findByNameAndState( $entity );
 		}
 		catch( \Exception $ex ) {

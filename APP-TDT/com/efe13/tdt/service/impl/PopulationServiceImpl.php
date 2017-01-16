@@ -6,6 +6,7 @@ require_once( getMVCPath( UTILS_PATH ) );
 require_once( getMVCPath( MAPPEABLE_PATH ) );
 require_once( getMVCPath( DTO_API_PATH ) );
 require_once( getMVCPath( QUERY_HELPER_PATH ) );
+require_once( getMVCPath( VALIDATION_EXCEPTION_PATH ) );
 require_once( getAppPath( STATUS_RESULT_SERVICE_PATH ) );
 require_once( getAppPath( SERVICE_RESULT_PATH ) );
 require_once( getAppPath( POPULATION_DTO_PATH ) );
@@ -16,6 +17,7 @@ use com\efe13\mvc\commons\api\util\Utils;
 use com\efe13\mvc\commons\api\interfaces\Mappeable;
 use com\efe13\mvc\model\api\impl\dto\DTOAPI;
 use com\efe13\mvc\model\api\impl\helper\QueryHelper;
+use com\efe13\mvc\commons\api\exception\ValidationException;
 use com\efe13\tdt\enums\StatusResultService;
 use com\efe13\tdt\helper\ServiceResult;
 use com\efe13\tdt\model\dto\PopulationDTO;
@@ -45,7 +47,7 @@ class PopulationServiceImpl extends PopulationService {
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( Exception $ex ) {
+		catch( \Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -76,7 +78,7 @@ class PopulationServiceImpl extends PopulationService {
 			
 			$this->statusResultService = StatusResultService::STATUS_SUCCESS;
 		}
-		catch( Exception $ex ) {
+		catch( \Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -86,7 +88,7 @@ class PopulationServiceImpl extends PopulationService {
 		return $this->serviceResult;
 	}
 	
-	public function getByState(StateDTO $stateDTO) {
+	public function getByState(Mappeable $stateDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
 
@@ -103,7 +105,7 @@ class PopulationServiceImpl extends PopulationService {
 			$this->serviceResult->setCollection( $dtos );
 			$this->statusResultService = StatusResultService::STATUS_SUCCESS;
 		}
-		catch( Exception $ex ) {
+		catch( \Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -118,6 +120,7 @@ class PopulationServiceImpl extends PopulationService {
 			$this->serviceResult = new ServiceResult();
 			
 			$this->validateDTO( $populationDTO, UpdateEnum::IS_NOT_UPDATE );
+
 			if( parent::save( $populationDTO ) > 0 ) {
 				$this->resultMessage = "La población se ha guardado correctamente";
 				$this->statusResultService = StatusResultService::STATUS_SUCCESS;
@@ -127,7 +130,7 @@ class PopulationServiceImpl extends PopulationService {
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( Exception $ex ) {
+		catch( \Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -151,7 +154,7 @@ class PopulationServiceImpl extends PopulationService {
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( Exception $ex ) {
+		catch( \Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
@@ -174,7 +177,7 @@ class PopulationServiceImpl extends PopulationService {
 				$this->statusResultService = StatusResultService::STATUS_FAILED;
 			}
 		}
-		catch( Exception $ex ) {
+		catch( \Exception $ex ) {
 			$this->resultMessage = $ex->getMessage();
 			$this->statusResultService = StatusResultService::STATUS_FAILED;
 		}
