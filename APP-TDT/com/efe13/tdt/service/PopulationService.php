@@ -133,7 +133,7 @@ class PopulationService extends ServiceAPI {
 	}
 
 	//@Override
-	public function update(Mappeable $populationDTO) {
+	public function updates(Mappeable $populationDTO) {
 		try {
 			$population = $this->map( $populationDTO, new Population() );
 			return self::$POPULATION_DAO->update( $population );
@@ -147,13 +147,13 @@ class PopulationService extends ServiceAPI {
 	public function delete(Mappeable $populationDTO) {
 		try {
 			$populationDTO->setActive( ActiveEnum::INACTIVE );
-			return $this->update( $populationDTO );
+			$this->updates( $populationDTO );
 		}
 		catch( \Exception $ex ) {
 			throw $ex;
 		}
 	}
-	
+
 	//@Override
 	public function validateDTO(Mappeable $dto, $update) {
 		throw new ValidationException( "This method has not implementation\ It needs to be implemented by the concrete class" );

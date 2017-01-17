@@ -28,7 +28,7 @@ class PopulationServiceImpl extends PopulationService {
 	private $serviceResult = null;
 	private $resultMessage;
 	private $statusResultService;
-	
+
 	private static $FIELD_MIN_LENGTH = 3;
 	private static $NAME_FIELD_MAX_LENGTH = 50;
 	
@@ -143,7 +143,7 @@ class PopulationServiceImpl extends PopulationService {
 	public function update(Mappeable $populationDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
-			
+
 			$this->validateDTO( $populationDTO, UpdateEnum::IS_UPDATE );
 			if( parent::update( $populationDTO ) ) {
 				$this->resultMessage = "La población se ha actualizado correctamente";
@@ -167,7 +167,7 @@ class PopulationServiceImpl extends PopulationService {
 	public function delete(Mappeable $populationDTO) {
 		try {
 			$this->serviceResult = new ServiceResult();
-			
+
 			if( parent::delete( $populationDTO ) ) {
 				$this->resultMessage = "El estado se ha eliminado correctamente";
 				$this->statusResultService = StatusResultService::STATUS_SUCCESS;

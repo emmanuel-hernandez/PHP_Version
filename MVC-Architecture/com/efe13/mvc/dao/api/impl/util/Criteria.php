@@ -125,6 +125,11 @@ final class Criteria {
 		$properties = HibernateUtil::getPropertiesClassWithOutIdProperty( $this->entity );
 
 		for( $i=0; $i<count( $properties ); $i++ ) {
+			if( Utils::isNull( $propertiesValues[ $i ] ) ) {
+				array_splice( $propertiesValues, $i, 1);
+				continue;
+			}
+
 			$propertiesValues[ $i ] = is_string( $propertiesValues[ $i ] ) ?
 									  sprintf( "%s = '%s'", $properties[ $i ], $propertiesValues[ $i ] ) :
 									  sprintf( "%s = %s", $properties[ $i ], $propertiesValues[ $i ] );

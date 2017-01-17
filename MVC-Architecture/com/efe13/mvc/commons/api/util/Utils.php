@@ -17,7 +17,7 @@ final class Utils {
 	}
 	
 	public static function isNull($object) {
-		return $object == null;
+		return is_null( $object );
 	}
 	
 	public static function isEmpty($object) {

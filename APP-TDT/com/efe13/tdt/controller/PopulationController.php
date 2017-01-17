@@ -98,17 +98,16 @@ class PopulationController {
 	//@RequestMapping( value="/{id}", method=RequestMethod\DELETE )
 	public function deletePopulation($populationId) {
 		try {
-			$serviceResult = getPopulation( $populationId );
+			$serviceResult = $this->getPopulation( $populationId );
 			if( $serviceResult->getStatusResult() == StatusResultService::STATUS_SUCCESS ) {
 				return self::$POPULATION_SERVICE->delete( $serviceResult->getObject() );
 			}
-			
+
 			return $serviceResult;
 		}
 		catch( Exception $ex ) {
 			return AppUtils::createResultServiceByMessageAndStatus( $ex->getMessage(), StatusResultService::STATUS_FAILED );
 		}
-
 	}
 }
 ?>

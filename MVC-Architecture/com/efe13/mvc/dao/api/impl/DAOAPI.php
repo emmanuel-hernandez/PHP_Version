@@ -30,7 +30,6 @@ abstract class DAOAPI implements IDAO {
 
 	private $sessionFactory;
 	private $criteriaClass;
-	//private final static Logger log = Logger.getLogger( DAOAPI.class );
 	
 	private $columnNameForActiveElement;
 	private $activeEnum;
@@ -41,9 +40,6 @@ abstract class DAOAPI implements IDAO {
 		$this->criteriaClass = $criteriaClass;
 		$this->columnNameForActiveElement = $columnNameForActiveElement;
 		$this->activeEnum = $activeEnum;
-		
-		//createSessionFactory();
-		//criteriaClass = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass() ).getActualTypeArguments()[0];
 	}
 	
 	//@Override
@@ -145,7 +141,7 @@ abstract class DAOAPI implements IDAO {
 	public function update(Mappeable $object) {
 		//echo 'Actualizando...<br>';
 		$session = $this->getCriteria();
-		
+
 		try {
 			$session->update( $object );
 			return true;

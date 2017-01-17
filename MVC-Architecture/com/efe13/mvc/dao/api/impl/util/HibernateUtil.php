@@ -12,7 +12,7 @@ class HibernateUtil {
 
 	private function __construct() {
 		try {
-			self::$sessionFactory = new SessionFactory( 'root', 'root', 'localhost', 'tdt' );
+			self::$sessionFactory = new SessionFactory( 'root', 'admin', 'localhost', 'tdt' );
 		}
 		catch( DAOException $ex ) {
 			throw new DAOException( $ex->getMessage() );
