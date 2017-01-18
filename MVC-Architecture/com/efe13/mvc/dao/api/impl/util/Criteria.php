@@ -147,6 +147,7 @@ final class Criteria {
 	}
 
 	private function getProjection() {
+		HibernateUtil::getMapping( get_class($this->entity) );
 		$projection = '';
 
 		if( !Utils::isNull( $this->projection ) ) {
@@ -161,6 +162,7 @@ final class Criteria {
 			$projections = array();
 			foreach( $fields as $field ) {
 				if( !Utils::contains( $field, '.' ) ) {
+					echo '<br><br>$field: ' . $field;
 					$definition = $this->entityAlias . '.' . $field;
 					$projections[] = sprintf( '%s AS "%s"', $definition, $definition );
 				}

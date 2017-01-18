@@ -2,7 +2,9 @@
 namespace com\efe13\mvc\dao\api\impl\util;
 
 require_once( 'SessionFactory.php' );
+require_once( dirname( dirname( dirname( dirname(__DIR__) ) ) ) . '/commons/api/util/Utils.php' );
 
+use com\efe13\mvc\commons\api\util\Utils;
 use com\efe13\mvc\dao\api\impl\util\SessionFactory;
 
 class HibernateUtil {
@@ -184,6 +186,55 @@ class HibernateUtil {
 
 	private static function getClassMethods($entity) {
 		return get_class_methods( $entity );
+	}
+
+	//Reflection API functions
+	public static function getMapping($entity) {
+		$reflection = new \ReflectionClass($entity);
+		$definitions = $reflection->getDocComment();
+		$pattern = '#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#';
+		preg_match_all( $pattern, $definitions, $matches, PREG_PATTERN_ORDER );
+
+		echo '<br><br>';
+		if( Utils::size( $matches ) <= 0 ) {
+			return null;
+		}
+
+		if( Utils::size( $matches[0] ) <= 0 ) {
+			return null;
+		}
+
+		$annotations = array();
+		foreach($matches[0] as $match) {
+			$annotations[] = self::parseAnnotation( trim( $match ) );
+		}
+
+		print_r( $annotations );
+		die('<br><br>jejej');
+	}
+
+	public static function parseAnnotation( $annotation ) {
+		$annotationName = substr( $annotation, 1, strripos( $annotation, '(' ) - 1 );
+		$annotationName = strtolower( trim( $annotationName ) );
+
+		switch($annotationName) {
+			case 'table': //attrs for this annotations name
+				return array( 'table' => self::getJsonFromAnnotation( $annotation ) );
+			break;
+			case 'foreignkey':
+				return array( 'foreignkey' => self::getJsonFromAnnotation( $annotation ) );
+			break;
+		}
+	}
+
+	private function getJsonFromAnnotation($annotation) {
+		$json = substr( $annotation, strripos( $annotation, '(' ) );
+		$json = substr( $json, 1, strlen( $json ) - 2 );
+
+		echo 'json: ' . $json . '<br><br>';
+		$json = json_decode( $json );
+
+		return $json;
 	}
 }
 ?>

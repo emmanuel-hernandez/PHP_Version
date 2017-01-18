@@ -7,13 +7,18 @@ require_once( getAppPath( STATE_PATH ) );
 use com\efe13\mvc\model\api\impl\entity\EntityAPI;
 use com\efe13\tdt\model\entity\State;
 
-//@Entity
-//@Table( name="population" )
+/**
+ * @Table({ "name": "population" })
+ * @ForeignKey([ {"name": "state", "entity": "State"},
+  * 			 {"name": "other", "entity": "OtherClass"} ])
+ */
 class Population extends EntityAPI {
 
-	//@Id
-	//@Column( name="populationId" )
-	//@GeneratedValue( strategy=GenerationType\AUTO )
+	/**
+	 *@Id
+	 *@Column( name="populationId" )
+	 *@GeneratedValue( strategy=GenerationType\AUTO )
+	 */
 	private $id;
 	
 	//@Column( name="name" )
