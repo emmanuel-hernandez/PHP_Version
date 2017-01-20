@@ -9,8 +9,7 @@ use com\efe13\tdt\model\entity\State;
 
 /**
  * @Table({ "name": "population" })
- * @ForeignKey([ {"name": "state", "entity": "State"},
-  * 			 {"name": "other", "entity": "OtherClass"} ])
+ * @ForeignKey([ {"name": "stateId", "entity": "com\efe13\tdt\model\entity\State"} ])
  */
 class Population extends EntityAPI {
 

@@ -5,11 +5,13 @@ require_once( dirname( dirname( dirname( dirname(__DIR__) ) ) ) . '/commons/api/
 require_once( dirname( dirname( dirname( dirname(__DIR__) ) ) ) . '/commons/api/exception/HibernateException.php' );
 require_once( 'HibernateUtil.php' );
 require_once( 'Alias.php' );
+require_once( 'JoinType.php' );
 
 use com\efe13\mvc\commons\api\util\Utils;
 use com\efe13\mvc\commons\api\exception\HibernateException;
 use com\efe13\mvc\dao\api\impl\util\HibernateUtil;
 use com\efe13\mvc\dao\api\impl\util\Alias;
+use com\efe13\mvc\dao\api\impl\util\JoinType;
 
 final class Criteria {
 	
@@ -57,12 +59,12 @@ final class Criteria {
 		return $this;
 	}
 
-	public function createAlias($entity, $alias, $joinType) {
+	public function createAlias($property, $alias, $joinType) {
 		if( Utils::isNull( $this->aliases ) ) {
 			$this->aliases = array();
 		}
 
-		$this->aliases[ $alias ] = new Alias( $entity, $alias, $joinType );
+		$this->aliases[ $alias ] = new Alias( $property, $alias, $joinType );
 		return $this;
 	}
 
@@ -74,7 +76,7 @@ final class Criteria {
 
 		$result = $this->execute();
 		while( $row = $result->fetch_array( MYSQLI_ASSOC ) ) {
-			$objects[] = HibernateUtil::buildObject( $this->entity, $row );
+			$objects[] = HibernateUtil::buildObject( $this->entity, $row, $this->aliases );
 		}
 
 		return $objects;
@@ -93,7 +95,7 @@ final class Criteria {
 		$projections = array();
 		$projections = explode( ',', $this->getProjection() );
 		if( count( $projections ) > 1 ) {
-			return HibernateUtil::buildObject( $this->entity, $result->fetch_array( MYSQLI_ASSOC ) );
+			return HibernateUtil::buildObject( $this->entity, $result->fetch_array( MYSQLI_ASSOC ), $this->aliases );
 		}
 		else {
 			$reg = $result->fetch_array( MYSQLI_ASSOC );
@@ -147,7 +149,7 @@ final class Criteria {
 	}
 
 	private function getProjection() {
-		HibernateUtil::getMapping( get_class($this->entity) );
+		$mappingClassDefinition = HibernateUtil::getMapping( get_class($this->entity) );
 		$projection = '';
 
 		if( !Utils::isNull( $this->projection ) ) {
@@ -160,9 +162,24 @@ final class Criteria {
 		$fields = explode( ', ', $projection );
 		if( !Utils::isEmpty( $fields ) ) {
 			$projections = array();
+
 			foreach( $fields as $field ) {
 				if( !Utils::contains( $field, '.' ) ) {
-					echo '<br><br>$field: ' . $field;
+					$foreignKey = $mappingClassDefinition->getForeignKeyByProperty( $field );
+
+					if( !Utils::isNull( $foreignKey ) ) {
+						$entity = $foreignKey->getEntity();
+						$entityName = HibernateUtil::getClassName( $foreignKey->getEntity() );
+
+						$alias = 's';
+						$this->createAlias( $entityName, $alias, JoinType::INNER_JOIN );
+						$foreignKeyDefinitions = HibernateUtil::getPropertiesClass( new $entity );
+						foreach( $foreignKeyDefinitions as $foreignKeyDefinition ) {
+							$definition = $alias . '.' . $foreignKeyDefinition;
+							$projections[] = sprintf( '%s AS "%s"', $definition, $definition );
+						}
+					}
+
 					$definition = $this->entityAlias . '.' . $field;
 					$projections[] = sprintf( '%s AS "%s"', $definition, $definition );
 				}
@@ -199,7 +216,6 @@ final class Criteria {
 
 				$restriction = $this->restrictions[ $i ];
 				if( Utils::contains( $restriction->getField(), '.' ) ) {
-
 					$aliasProperty = explode( '.', $restriction->getField() );
 					if( array_key_exists( $aliasProperty[0], $this->aliases ) ) {
 
@@ -208,6 +224,9 @@ final class Criteria {
 							$this->restrictions[ $i ]->setField( implode( '.', $aliasProperty ) );
 						}
 					}
+				}
+				else {
+					$this->restrictions[ $i ]->setField( $this->entityAlias . '.' . $restriction->getField() );
 				}
 			}
 		}
@@ -236,7 +255,7 @@ final class Criteria {
 
 	private function execute( $is_insert = false, $is_update = false ) {
 		$this->sql = $is_insert || $is_update ? $this->sql : $this->getSQL();
-		echo( $this->sql . '<br><br>');
+		echo '<br><br>SQL: ' . $this->sql . '<br><br>';
 		$result = $this->sessionFactory->query( $this->sql );
 
 		if( $result === false ) {

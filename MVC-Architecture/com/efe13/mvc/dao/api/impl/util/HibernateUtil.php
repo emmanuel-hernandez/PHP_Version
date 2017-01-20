@@ -1,11 +1,15 @@
 <?php
 namespace com\efe13\mvc\dao\api\impl\util;
 
-require_once( 'SessionFactory.php' );
 require_once( dirname( dirname( dirname( dirname(__DIR__) ) ) ) . '/commons/api/util/Utils.php' );
+require_once( 'SessionFactory.php' );
+require_once( 'Mapping.php' );
+require_once( 'ForeignKey.php' );
 
 use com\efe13\mvc\commons\api\util\Utils;
 use com\efe13\mvc\dao\api\impl\util\SessionFactory;
+use com\efe13\mvc\dao\api\impl\util\Mapping;
+use com\efe13\mvc\dao\api\impl\util\ForeignKey;
 
 class HibernateUtil {
 
@@ -36,7 +40,7 @@ class HibernateUtil {
 	}
 
 	public static function getClassName($entity) {
-		$fullClassName = get_class( $entity );
+		$fullClassName = is_string($entity) ? $entity : get_class( $entity );
 		$lastBackSlashPos = strripos( $fullClassName, '\\' ) + 1;
 		$className = substr( $fullClassName, $lastBackSlashPos, strlen( $fullClassName ) );
 
@@ -139,13 +143,23 @@ class HibernateUtil {
 		return null;
 	}
 
-	public static function buildObject($entity, array $data) {
+	public static function buildObject($entity, array $data, $aliases) {
 		$classInstance = new $entity;
+		$propertiesByAlias = Utils::groupDataByArrayIndex( array_keys( $data ) );
 
+		echo '$data: <br><br>';
+		print_r( $data );
 		foreach ( $data as $method => $value ) {
+			foreach( $propertiesByAlias as $alias => $properties ) {
+				;
+			}
+
 			$aliasProperty = explode( '.', $method );
-			$id = substr( $aliasProperty[1], strlen( $aliasProperty[1] ) - 2, 2 );
-			$method = 'set' . (( strcasecmp( $id, 'id' ) == 0 ) ? $id : $aliasProperty[1]);
+			$alias = $aliasProperty[ 0 ];
+			$property = $aliasProperty[ 1 ];
+
+			$id = substr( $property, strlen( $property ) - 2, 2 );
+			$method = 'set' . (( strcasecmp( $id, 'id' ) == 0 ) ? $id : $property);
 
 			$classInstance->$method( $value );
 		}
@@ -190,35 +204,83 @@ class HibernateUtil {
 
 	//Reflection API functions
 	public static function getMapping($entity) {
-		$reflection = new \ReflectionClass($entity);
-		$definitions = $reflection->getDocComment();
-		$pattern = '#(@[a-zA-Z]+\s*[a-zA-Z0-9, ()_].*)#';
-		preg_match_all( $pattern, $definitions, $matches, PREG_PATTERN_ORDER );
+		$classFile = new \ReflectionClass($entity);
+		$comments = $classFile->getDocComment();
+		$lines = explode( '*', $comments );
 
-		echo '<br><br>';
-		if( Utils::size( $matches ) <= 0 ) {
+		if( Utils::size( $lines ) <= 0 ) {
 			return null;
 		}
 
-		if( Utils::size( $matches[0] ) <= 0 ) {
+		$annotations = self::getAnnotations( $lines );
+		if( Utils::size( $lines ) <= 0 ) {
 			return null;
 		}
 
+		$mappedClass = new Mapping();
+		foreach($annotations as $annotation) {
+			$mappingClass = self::parseAnnotation( trim( $annotation ) );
+
+			if( array_key_exists( 'table', $mappingClass ) ) {
+				$mappedClass->setTable( $mappingClass['table']->name );
+			}
+			else if( array_key_exists( 'foreignkey', $mappingClass ) ) {
+				foreach( $mappingClass['foreignkey'] as $foreignkey ) {
+					$mappedClass->addForeignKey( new ForeignKey( $foreignkey->name, str_replace( '/', '\\', $foreignkey->entity ) ) );
+				}
+			}
+		}
+
+		return $mappedClass;
+	}
+
+	public static function getAnnotations(array $lines) {
 		$annotations = array();
-		foreach($matches[0] as $match) {
-			$annotations[] = self::parseAnnotation( trim( $match ) );
+		$continueAnnotation = false;
+		$partialAnnotation = '';
+
+		foreach( $lines as $line ) {
+			$line = trim( $line );
+			if( strlen( $line ) <= 3 ) {
+				continue;
+			}
+
+			if( preg_match( '/@[a-zA-Z]*/i', $line ) ) {
+				$last2Chars = trim( substr( $line, strlen($line) - 2 ) );
+				if( strcasecmp( $last2Chars, '})' ) == 0 ||
+					strcasecmp( $last2Chars, '])' ) == 0 ) {
+						$partialAnnotation = $line;
+				}
+				else if( strcasecmp( $last2Chars, '},' ) == 0 ) {
+					$partialAnnotation = $line;
+					$continueAnnotation = true;
+					continue;
+				}
+			}
+			else {
+				$beginningChars = substr( $line, 0, 1 );
+				if( $continueAnnotation && strcasecmp( $line, '{' ) ) {
+					$partialAnnotation = $partialAnnotation . $line;
+					$continueAnnotation = false;
+				}
+			}
+
+			$annotations[] = $partialAnnotation;
 		}
 
-		print_r( $annotations );
-		die('<br><br>jejej');
+		return $annotations;
 	}
 
 	public static function parseAnnotation( $annotation ) {
-		$annotationName = substr( $annotation, 1, strripos( $annotation, '(' ) - 1 );
-		$annotationName = strtolower( trim( $annotationName ) );
+		$annotationFound = stripos( $annotation, '@Table' );
+		$annotationFound = $annotationFound === false ? stripos( $annotation, '@ForeignKey' ) : $annotationFound;
+		if( $annotationFound === false ) {
+			return null;
+		}
 
+		$annotationName = strtolower( trim( substr( $annotation, 1, strripos( $annotation, '(' ) - 1 ) ) );
 		switch($annotationName) {
-			case 'table': //attrs for this annotations name
+			case 'table':
 				return array( 'table' => self::getJsonFromAnnotation( $annotation ) );
 			break;
 			case 'foreignkey':
@@ -230,8 +292,7 @@ class HibernateUtil {
 	private function getJsonFromAnnotation($annotation) {
 		$json = substr( $annotation, strripos( $annotation, '(' ) );
 		$json = substr( $json, 1, strlen( $json ) - 2 );
-
-		echo 'json: ' . $json . '<br><br>';
+		$json = str_replace( '\\', '/', $json );
 		$json = json_decode( $json );
 
 		return $json;

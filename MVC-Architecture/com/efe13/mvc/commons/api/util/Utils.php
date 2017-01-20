@@ -59,5 +59,33 @@ final class Utils {
 	public static function size(array $array) {
 		return count( $array );
 	}
+
+	public static function getArrayElementbByIndex($index, array $array) {
+		foreach( $array as $key => $value ) {
+			echo '<br>$key<br>';
+			var_dump( $value );
+			if( strcasecmp( $index, $key ) == 0 ) {
+				return $array[ $key ];
+			}
+		}
+
+		return false;
+	}
+
+	public static function groupDataByArrayIndex(array $array) {
+		$result = array();
+
+		if( self::size( $array ) > 2 ) {
+			foreach( $array as $element ) {
+				$aliasProperty = explode( '.', $element );
+				$alias = $aliasProperty[ 0 ];
+				$property = $aliasProperty[ 1 ];
+
+				$result[ $alias ][] = $property;
+			}
+		}
+
+		return $result;
+	}
 }
 ?>
