@@ -147,13 +147,7 @@ class HibernateUtil {
 		$classInstance = new $entity;
 		$propertiesByAlias = Utils::groupDataByArrayIndex( array_keys( $data ) );
 
-		echo '$data: <br><br>';
-		print_r( $data );
 		foreach ( $data as $method => $value ) {
-			foreach( $propertiesByAlias as $alias => $properties ) {
-				;
-			}
-
 			$aliasProperty = explode( '.', $method );
 			$alias = $aliasProperty[ 0 ];
 			$property = $aliasProperty[ 1 ];
