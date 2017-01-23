@@ -160,6 +160,7 @@ class HibernateUtil {
 
 		foreach ( $data as $method => $value ) {
 			echo '$method => ' . $method . '<br><br>';
+
 			$aliasProperty = explode( '.', $method );
 			$alias = $aliasProperty[ 0 ];
 			$property = $aliasProperty[ 1 ];
