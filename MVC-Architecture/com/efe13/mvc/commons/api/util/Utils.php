@@ -56,20 +56,27 @@ final class Utils {
 		return ($contains !== false);
 	}
 
-	public static function size(array $array) {
-		return count( $array );
+	public static function size($object) {
+		if( is_string( $object ) ) {
+			return  strlen( $object );
+		}
+		else if( is_array( $object ) ) {
+			return count( $object );
+		}
+
+		return 0;
+	}
+
+	public static function areEquals($string1, $string2) {
+		return ( strcasecmp( $string1, $string2 ) == 0 );
 	}
 
 	public static function getArrayElementbByIndex($index, array $array) {
-		foreach( $array as $key => $value ) {
-			echo '<br>$key<br>';
-			var_dump( $value );
-			if( strcasecmp( $index, $key ) == 0 ) {
-				return $array[ $key ];
-			}
+		if( array_key_exists( $index, $array ) ) {
+			return $array[ $index ];
 		}
 
-		return false;
+		return null;
 	}
 
 	public static function groupDataByArrayIndex(array $array) {

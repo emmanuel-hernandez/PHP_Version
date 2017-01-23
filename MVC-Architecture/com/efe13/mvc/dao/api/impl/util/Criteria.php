@@ -21,6 +21,7 @@ final class Criteria {
 	private $restrictions;
 	private $projection;
 	private $aliases;
+	private $classMappingDifinition;
 
 	private static $IS_INSERT = true;
 	private static $IS_NOT_INSERT = false;
@@ -35,11 +36,13 @@ final class Criteria {
 		$this->projections = null;
 		$this->aliases = null;
 		$this->entityAlias = null;
+		$this->classMappingDifinition = null;
 	}
 
 	public function createCriteria($entity, $tableAlias = null) {
 		$this->entity = $entity;
 		$this->entityAlias = $tableAlias;
+		$this->classMappingDifinition = HibernateUtil::getMapping( get_class( $this->entity ) );
 
 		return $this;
 	}
@@ -65,6 +68,7 @@ final class Criteria {
 		}
 
 		$this->aliases[ $alias ] = new Alias( $property, $alias, $joinType );
+
 		return $this;
 	}
 
@@ -95,7 +99,7 @@ final class Criteria {
 		$projections = array();
 		$projections = explode( ',', $this->getProjection() );
 		if( count( $projections ) > 1 ) {
-			return HibernateUtil::buildObject( $this->entity, $result->fetch_array( MYSQLI_ASSOC ), $this->aliases );
+			return HibernateUtil::buildObject( $this->entity, $result->fetch_array( MYSQLI_ASSOC ), $this->aliases, $this->classMappingDifinition );
 		}
 		else {
 			$reg = $result->fetch_array( MYSQLI_ASSOC );
@@ -149,7 +153,6 @@ final class Criteria {
 	}
 
 	private function getProjection() {
-		$mappingClassDefinition = HibernateUtil::getMapping( get_class($this->entity) );
 		$projection = '';
 
 		if( !Utils::isNull( $this->projection ) ) {
@@ -165,7 +168,7 @@ final class Criteria {
 
 			foreach( $fields as $field ) {
 				if( !Utils::contains( $field, '.' ) ) {
-					$foreignKey = $mappingClassDefinition->getForeignKeyByProperty( $field );
+					$foreignKey = $this->classMappingDifinition->getForeignKeyByRelationshipId( $field );
 
 					if( !Utils::isNull( $foreignKey ) ) {
 						$entity = $foreignKey->getEntity();

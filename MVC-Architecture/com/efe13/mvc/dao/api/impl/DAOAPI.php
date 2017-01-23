@@ -74,6 +74,7 @@ abstract class DAOAPI implements IDAO {
 				->add( Restrictions::eq( $this->columnNameForActiveElement, $this->activeEnum ) );
 
 			$object = $criteria->uniqueResult();
+
 			return $object;
 		}
 		catch( HibernateException $ex ) {

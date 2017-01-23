@@ -18,7 +18,7 @@ class HibernateUtil {
 
 	private function __construct() {
 		try {
-			self::$sessionFactory = new SessionFactory( 'root', 'admin', 'localhost', 'tdt' );
+			self::$sessionFactory = new SessionFactory( 'root', 'root', 'localhost', 'tdt' );
 		}
 		catch( DAOException $ex ) {
 			throw new DAOException( $ex->getMessage() );
@@ -143,27 +143,51 @@ class HibernateUtil {
 		return null;
 	}
 
-	public static function buildObject($entity, array $data, $aliases) {
+	public static function buildObject($entity, array $data, $aliases, Mapping $classDefinition) {
 		$classInstance = new $entity;
-		$propertiesByAlias = Utils::groupDataByArrayIndex( array_keys( $data ) );
 
-		echo '$data: <br><br>';
-		print_r( $data );
-		foreach ( $data as $method => $value ) {
-			foreach( $propertiesByAlias as $alias => $properties ) {
-				;
+		$foreignkeys = array();
+		foreach( $aliases as $alias ) {
+			foreach( $classDefinition->getForeignKeys() as $foreignkey ) {
+				if( Utils::areEquals( $alias->getEntity(), self::getClassName( $foreignkey->getEntity() ) ) ) {
+					$relationshipInstance = $foreignkey->getEntity();
+					$relationshipMethod = 'set' . $foreignkey->getProperty();
+					$classInstance->$relationshipMethod( new $relationshipInstance() );
+					$foreignkeys[ $alias->getAlias() ] = $alias->getEntity();
+				}
 			}
+		}
 
+		foreach ( $data as $method => $value ) {
+			echo '$method => ' . $method . '<br><br>';
 			$aliasProperty = explode( '.', $method );
 			$alias = $aliasProperty[ 0 ];
 			$property = $aliasProperty[ 1 ];
 
-			$id = substr( $property, strlen( $property ) - 2, 2 );
-			$method = 'set' . (( strcasecmp( $id, 'id' ) == 0 ) ? $id : $property);
+			//Generate setter method
+			$id = substr( $property, Utils::size( $property ) - 2, 2 );
+			$method = 'set';
+			if( Utils::areEquals( $id, 'id' ) ) {
+				$method .= $id;
+			}
+			else {
+				$method .= $property;
+			}
 
-			$classInstance->$method( $value );
+			//Search for foreign key
+			$foreignkeyMethod = Utils::getArrayElementbByIndex( $alias, $foreignkeys );
+			if( Utils::isNull( $foreignkeyMethod ) ) {
+				$classInstance->$method( $value );
+			}
+			else {
+				$foreignkeyMethod = 'get' . $foreignkeys[ $alias ];
+				$classInstance->$foreignkeyMethod()->$method( $value );
+			}
 		}
 
+		//Add foreign key classes to object
+		echo 'var_dump for $classInstance: <br><br>';
+		var_dump( $classInstance );
 		return $classInstance;
 	}
 
@@ -223,10 +247,11 @@ class HibernateUtil {
 
 			if( array_key_exists( 'table', $mappingClass ) ) {
 				$mappedClass->setTable( $mappingClass['table']->name );
+				$mappedClass->setIdColumn( $mappingClass['table']->idColumn );
 			}
 			else if( array_key_exists( 'foreignkey', $mappingClass ) ) {
 				foreach( $mappingClass['foreignkey'] as $foreignkey ) {
-					$mappedClass->addForeignKey( new ForeignKey( $foreignkey->name, str_replace( '/', '\\', $foreignkey->entity ) ) );
+					$mappedClass->addForeignKey( new ForeignKey( $foreignkey->property, str_replace( '/', '\\', $foreignkey->entity ), $foreignkey->relationshipId ) );
 				}
 			}
 		}
@@ -289,7 +314,7 @@ class HibernateUtil {
 		}
 	}
 
-	private function getJsonFromAnnotation($annotation) {
+	public static function getJsonFromAnnotation($annotation) {
 		$json = substr( $annotation, strripos( $annotation, '(' ) );
 		$json = substr( $json, 1, strlen( $json ) - 2 );
 		$json = str_replace( '\\', '/', $json );

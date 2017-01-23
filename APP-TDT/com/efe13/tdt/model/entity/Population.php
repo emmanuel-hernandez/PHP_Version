@@ -8,8 +8,8 @@ use com\efe13\mvc\model\api\impl\entity\EntityAPI;
 use com\efe13\tdt\model\entity\State;
 
 /**
- * @Table({ "name": "population" })
- * @ForeignKey([ {"name": "stateId", "entity": "com\efe13\tdt\model\entity\State"} ])
+ * @Table({ "name": "population", "idColumn": "id" })
+ * @ForeignKey([ {"property": "state", "relationshipId": "stateId", "entity": "com\efe13\tdt\model\entity\State"} ])
  */
 class Population extends EntityAPI {
 

@@ -5,8 +5,10 @@ require_once( getMVCPath( IENTITY_PATH ) );
 
 use com\efe13\mvc\model\api\impl\entity\EntityAPI;
 
-//@Entity
-//@Table( name="state" )
+/**
+ * @Table({ "name": "state", "idColumn": "id" })
+ * @ForeignKey([])
+ */
 class State extends EntityAPI {
 
 	//@Id

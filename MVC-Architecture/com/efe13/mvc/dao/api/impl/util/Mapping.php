@@ -1,17 +1,21 @@
 <?php
 namespace com\efe13\mvc\dao\api\impl\util;
 
+require_once( dirname( dirname( dirname( dirname(__DIR__) ) ) ) . '/commons/api/util/Utils.php' );
 require_once( 'ForeignKey.php' );
 
+use com\efe13\mvc\commons\api\util\Utils;
 use com\efe13\mvc\dao\api\impl\util\ForeignKey;
 
 class Mapping {
 	private $table;
+	private $idColumn;
 	private $foreignKeys;
 
 	public function __construct() {
 		$this->table = null;
 		$this->foreignKeys = null;
+		$this->idColumn = null;
 	}
 
 	public function setTable($table) {
@@ -20,6 +24,14 @@ class Mapping {
 
 	public function getTable() {
 		return $this->table;
+	}
+
+	public function setIdColumn($idColumn) {
+		$this->idColumn = $idColumn;
+	}
+
+	public function getIdColumn() {
+		return $this->idColumn;
 	}
 
 	public function setForeignKeys($foreignKeys) {
@@ -38,9 +50,9 @@ class Mapping {
 		$this->foreignKeys[] = $foreignKey;
 	}
 
-	public function getForeignKeyByProperty($property) {
+	public function getForeignKeyByRelationshipId($relationshipId) {
 		foreach( $this->foreignKeys as $foreignKey ) {
-			if( strcasecmp( $foreignKey->getProperty(), $property ) == 0 ) {
+			if( Utils::areEquals( $foreignKey->getRelationshipId(), $relationshipId ) ) {
 				return $foreignKey;
 			}
 		}

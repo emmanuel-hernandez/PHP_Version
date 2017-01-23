@@ -4,10 +4,12 @@ namespace com\efe13\mvc\dao\api\impl\util;
 class ForeignKey {
 	private $property;
 	private $entity;
+	private $relationshipId;
 
-	public function __construct($property, $entity) {
+	public function __construct($property, $entity, $relationshipId) {
 		$this->property = $property;
 		$this->entity = $entity;
+		$this->relationshipId = $relationshipId;
 	}
 
 	public function setProperty($property) {
@@ -24,6 +26,14 @@ class ForeignKey {
 
 	public function getEntity() {
 		return $this->entity;
+	}
+
+	public function setRelationshipId($relationshipId) {
+		$this->relationshipId = $relationshipId;
+	}
+
+	public function getRelationshipId() {
+		return $this->relationshipId;
 	}
 }
 ?>

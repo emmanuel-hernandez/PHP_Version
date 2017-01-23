@@ -70,7 +70,7 @@ $controller = new PopulationController();
 //$objects = $controller->getPopulation( 20 );
 
 $object = new PopulationDTO();
-$object->setId( 321 );
+$object->setId( 324 );
 $object->setName( 'POPULATION 2222 TEST' );
 
 $state = new StateDTO();
@@ -81,7 +81,7 @@ $object->setActive( true );
 //$objects = $controller->savePopulation( $object );
 //$objects = $controller->updatePopulation( 321, $object );
 
-$objects = $controller->deletePopulation( 321 );
+$objects = $controller->deletePopulation( 324 );
 
 $printer = new Printer();
 $printer->output( $objects );
